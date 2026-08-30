@@ -1,0 +1,2762 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<link rel="icon" type="image/png" href="assets/img-ba9f9ca100.png">
+<title>Ziggy's B&amp;G Quest</title>
+<meta name="description" content="Welcome to Ravens Wood School, see if you can help Ziggy find their way around">
+<meta property="og:title" content="Ziggy's B&amp;G Quest">
+<meta property="og:description" content="Welcome to Ravens Wood School, see if you can help Ziggy find their way around">
+<meta property="og:image" content="assets/img-0568d71b16.png">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Ziggy's B&amp;G Quest">
+<meta name="twitter:description" content="Welcome to Ravens Wood School, see if you can help Ziggy find their way around">
+<meta name="twitter:image" content="assets/img-0568d71b16.png">
+<link rel="apple-touch-icon" href="assets/img-59cc6f87a3.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ziggy's Quest">
+<meta name="theme-color" content="#1b2a20">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     ZIGGY'S VALUES QUEST — brand tokens sampled from the mascot
+     ============================================================ */
+  :root{
+    --ink:#16171b;        /* Ziggy's body */
+    --forest:#1b2a20;     /* wing green */
+    --moss:#20351c;       /* chest scallops / pupils */
+    --leaf:#2c4533;       /* highlight green */
+    --beak:#6f7378;
+    --beak-dark:#54565a;
+    --paper:#f2f6f0;
+    --sky-top:#d9ecdf;
+    --sky-bot:#f4f8f1;
+    --gold:#f0b23e;
+    --gold-dark:#d4941c;
+    --danger:#8a93a3;
+    --white:#ffffff;
+    --radius:22px;
+    --shadow:0 6px 0 rgba(22,23,27,.10);
+    font-size:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none;}
+  button, .hotspot, .kp-fix, .kp-litter, .rot-btn{touch-action:manipulation;}
+  html,body{margin:0; height:100%;}
+  body{
+    font-family:'Nunito', 'Segoe UI', system-ui, sans-serif;
+    background:linear-gradient(var(--sky-top), var(--sky-bot));
+    color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    min-height:100vh; min-height:100dvh; padding:12px;
+    overflow:hidden;
+  }
+  h1,h2,h3,.display{font-family:'Baloo 2', 'Nunito', sans-serif;}
+
+  #app{
+    user-select:none; -webkit-user-select:none;
+    width:min(760px, 100%);
+    height:min(860px, 100%);
+    position:relative;
+  }
+  .screen{
+    position:absolute; inset:0;
+    display:none; flex-direction:column; align-items:center;
+    background:var(--paper);
+    border:3px solid var(--ink);
+    border-radius:28px;
+    box-shadow:0 10px 0 rgba(22,23,27,.12);
+    overflow:hidden;
+  }
+  .screen.active{display:flex;}
+
+  /* ---------- shared bits ---------- */
+  .btn{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800; font-size:1.25rem;
+    color:var(--white); background:var(--moss);
+    border:3px solid var(--ink); border-radius:999px;
+    padding:.7em 2em; cursor:pointer;
+    box-shadow:0 5px 0 var(--ink);
+    transition:transform .08s, box-shadow .08s;
+  }
+  .btn:hover{transform:translateY(-2px); box-shadow:0 7px 0 var(--ink);}
+  .btn:active{transform:translateY(3px); box-shadow:0 2px 0 var(--ink);}
+  .btn:focus-visible{outline:4px solid var(--gold); outline-offset:3px;}
+  .btn.secondary{background:var(--white); color:var(--ink);}
+  .eyebrow{
+    font-family:'Baloo 2', sans-serif; font-weight:700;
+    text-transform:uppercase; letter-spacing:.18em; font-size:.8rem;
+    color:var(--leaf);
+  }
+
+  /* ---------- Ziggy (animated mascot) ---------- */
+  .ziggy-img{width:100%; height:auto; display:block; user-select:none; pointer-events:none;}
+  .bob{animation:bob 2.6s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+  /* ---------- title screen ---------- */
+  #titleScreen{justify-content:flex-start; gap:6px; text-align:center; padding:24px; overflow-y:auto;}
+
+  /* ---------- Loading screen ---------- */
+  #loadingScreen{
+    justify-content:center; align-items:center; text-align:center;
+    gap:18px; padding:24px; background:var(--paper);
+  }
+  #loaderStage{
+    position:relative; width:min(220px, 55vw); aspect-ratio:1;
+  }
+  #loaderStage img{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:contain;
+    opacity:0; transition:opacity .25s ease;
+  }
+  #loaderStage img.on{opacity:1;}
+  #loaderText{font-family:'Baloo 2'; font-weight:800; color:var(--leaf); font-size:1.1rem;}
+  #loaderBarTrack{
+    width:min(280px, 70vw); height:16px; border:3px solid var(--ink); border-radius:999px;
+    background:var(--white); overflow:hidden; box-shadow:var(--shadow);
+  }
+  #loaderBarFill{
+    height:100%; width:0%; background:linear-gradient(90deg, var(--leaf), var(--moss));
+    border-radius:999px; transition:width linear;
+  }
+  #loaderContinueBtn{
+    opacity:0; transform:translateY(6px); pointer-events:none;
+    transition:opacity .4s ease, transform .4s ease;
+  }
+  #loaderContinueBtn.show{opacity:1; transform:translateY(0); pointer-events:auto;}
+  @media (prefers-reduced-motion:reduce){
+    #loaderStage img{transition:none;}
+    #loaderContinueBtn{transition:none;}
+  }
+  #titleScreen h1{font-size:clamp(2.1rem,6vw,3.2rem); margin:.1em 0; font-weight:800;}
+  #titleScreen p{max-width:34em; margin:.3em 0; font-weight:700; color:#3a4340;}
+  #schoolName{color:var(--leaf);}
+  .title-ziggy{width:min(210px,40vw);}
+
+  /* ---------- HUD ---------- */
+  .hud{
+    width:100%; display:flex; justify-content:space-between; align-items:center;
+    padding:14px 20px; background:var(--forest); color:var(--white);
+    border-bottom:3px solid var(--ink); flex-wrap:wrap; gap:4px 10px;
+  }
+  #memoryScreen .hud{padding-left:104px; min-height:54px;}
+  @media (max-width:560px){
+    #memoryScreen .hud{padding-left:96px;}
+    #memoryScreen .hud .display{font-size:.95rem;}
+  }
+  .hud .display{font-size:1.15rem; font-weight:700;}
+  .hud .stat{display:flex; align-items:center; gap:.45em;}
+
+  /* ---------- memory screen ---------- */
+  #memoryScreen{padding-bottom:14px;}
+  #memoryIntro{font-weight:700; text-align:center; padding:10px 24px 0; color:#3a4340;}
+  #board{
+    flex:1; width:100%; padding:14px 18px 6px;
+    display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
+    align-content:center;
+  }
+  @media (max-width:520px){ #board{grid-template-columns:repeat(3,1fr); gap:9px;} }
+  .card{
+    perspective:800px; cursor:pointer; border:none; background:none; padding:0;
+    min-height:96px; height:100%;
+  }
+  .card:focus-visible .card-inner{outline:4px solid var(--gold); outline-offset:2px;}
+  .card-inner{
+    position:relative; width:100%; height:100%;
+    transition:transform .45s; transform-style:preserve-3d;
+    border-radius:var(--radius);
+  }
+  .card.flipped .card-inner{transform:rotateY(180deg);}
+  .card-face{
+    position:absolute; inset:0; backface-visibility:hidden;
+    border:3px solid var(--ink); border-radius:var(--radius);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:8px; box-shadow:var(--shadow);
+  }
+  .card-back{background:var(--forest); overflow:hidden;}
+  .card-back svg{width:70%; opacity:.9;}
+  .card-front{
+    background:var(--white); transform:rotateY(180deg);
+    text-align:center; gap:2px;
+  }
+  .card-front .word{font-family:'Baloo 2'; font-weight:800; font-size:1.05rem; line-height:1.1;}
+  .card-front .meaning{font-size:.72rem; font-weight:700; color:#4a534f; line-height:1.25;}
+  .card.matched .card-front{background:#e6f0e2; border-color:var(--leaf);}
+  .card.matched{cursor:default; animation:pop .4s;}
+  @keyframes pop{40%{transform:scale(1.07)}}
+  .card.wrong .card-inner{animation:shake .4s;}
+  @keyframes shake{20%,60%{transform:rotateY(180deg) translateX(6px)}40%,80%{transform:rotateY(180deg) translateX(-6px)}}
+  #matchToast{
+    min-height:2.1em; text-align:center; font-weight:800; color:var(--moss);
+    padding:0 20px; font-family:'Baloo 2'; font-size:1.05rem;
+  }
+  .feather-count{display:inline-flex; gap:3px; vertical-align:middle;}
+  .feather{width:16px; height:16px; border-radius:50% 50% 50% 0; background:var(--leaf); border:2px solid var(--ink); transform:rotate(-45deg); display:inline-block;}
+  .feather.dim{background:#c8d2c9; border-color:#9aa79d;}
+
+  /* ---------- interstitial ---------- */
+  #powerScreen{justify-content:flex-start; text-align:center; gap:10px; padding:26px; overflow-y:auto;}
+  #powerScreen h2{font-size:2rem; margin:.2em 0;}
+  #powerScreen p{max-width:32em; font-weight:700; color:#3a4340; margin:.25em 0;}
+  #shieldRow{display:flex; gap:8px; margin:10px 0;}
+  .shield-big{width:34px; height:34px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); background:var(--leaf); border:3px solid var(--ink); box-shadow:var(--shadow);}
+
+  /* ---------- flight screen ---------- */
+  #flightScreen{user-select:none;}
+  #sky{
+    position:relative; flex:1; width:100%; overflow:hidden; touch-action:none;
+    background:linear-gradient(#cde8f4 0%, #e6f3ec 70%, #f4f8f1 100%);
+    cursor:pointer;
+  }
+  #skyline{position:absolute; left:0; right:0; bottom:0; height:120px; pointer-events:none;}
+  .entity{position:absolute; will-change:transform;}
+  #player{width:94px; height:74px; z-index:5; filter:drop-shadow(0 4px 3px rgba(22,23,27,.25));}
+  .star svg{width:100%; height:100%;}
+  .cloud svg{width:100%; height:100%;}
+  #flightMsg{
+    position:absolute; top:12px; left:50%; transform:translateX(-50%);
+    background:var(--ink); color:var(--white); font-weight:800;
+    padding:.45em 1.2em; border-radius:999px; font-family:'Baloo 2';
+    opacity:0; transition:opacity .3s; pointer-events:none; z-index:9; white-space:nowrap;
+  }
+  #flightMsg.show{opacity:1;}
+  #tapHint{
+    position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
+    font-weight:800; color:var(--ink); background:rgba(255,255,255,.85);
+    padding:.4em 1em; border-radius:999px; z-index:9; font-size:.9rem;
+    border:2px solid var(--ink); pointer-events:none;
+  }
+
+  /* ---------- Ziggy Flight Challenge ---------- */
+  /* the diamond is now just a tinted star (see spawn() in JS) — no separate CSS needed */
+
+  #flightGateOverlay, #flightGameOver{
+    display:none; position:absolute; inset:0; z-index:30;
+    background:rgba(22,23,27,.88); color:var(--white);
+    flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:14px; padding:24px;
+  }
+  #flightGateOverlay.show, #flightGameOver.show{display:flex;}
+  #flightGateOverlay p, #flightGameOver p{max-width:32em; margin:0; font-weight:700;}
+  #flightGateOverlay #flightGatePrompt{font-size:1.15rem; font-weight:800;}
+  #flightGameOver h3{font-family:'Baloo 2'; font-size:2rem; margin:0; color:var(--gold);}
+  #flightGateBarTrack{
+    width:min(280px, 70vw); height:12px; border:3px solid var(--white); border-radius:999px;
+    background:rgba(255,255,255,.2); overflow:hidden;
+  }
+  #flightGateBarFill{
+    height:100%; width:100%; background:var(--gold); border-radius:999px;
+    transition:width linear;
+  }
+  #flightGateOverlay .answers{width:min(420px,90%);}
+  #flightGateOverlay .answer-btn.correct{background:#cfead0; color:var(--ink);}
+  #flightGateOverlay .answer-btn.wrong{background:#f0b0b0; color:var(--ink);}
+
+  /* ---------- results ---------- */
+  #resultScreen{justify-content:flex-start; text-align:center; gap:8px; padding:24px; overflow-y:auto;}
+  #resultScreen h2{font-size:2.1rem; margin:.15em 0;}
+  #finalScore{font-family:'Baloo 2'; font-size:3rem; font-weight:800; color:var(--moss); line-height:1;}
+  #valuesRecap{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:8px; width:100%; max-width:640px; margin:10px 0;
+  }
+  .recap-item{
+    background:var(--white); border:3px solid var(--ink); border-radius:16px;
+    padding:8px 12px; text-align:left; box-shadow:var(--shadow);
+  }
+  .recap-item b{font-family:'Baloo 2'; color:var(--moss);}
+  .recap-item span{display:block; font-size:.8rem; font-weight:700; color:#4a534f;}
+  .btn-row{display:flex; gap:12px; flex-wrap:wrap; justify-content:center;}
+
+  /* ---------- unlockable games ---------- */
+  #unlockHead{margin-top:6px;}
+  #unlockRow{
+    display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
+    width:100%; max-width:640px; margin:6px 0 10px;
+  }
+  .game-btn{
+    flex:1 1 170px; max-width:200px; cursor:pointer;
+    background:var(--white); border:3px solid var(--ink); border-radius:18px;
+    box-shadow:0 5px 0 var(--ink); padding:12px 10px 14px;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    font-family:'Baloo 2', sans-serif; font-weight:800;
+    transition:transform .08s, box-shadow .08s;
+  }
+  .game-btn:hover{transform:translateY(-2px); box-shadow:0 7px 0 var(--ink);}
+  .game-btn:active{transform:translateY(3px); box-shadow:0 2px 0 var(--ink);}
+  .game-btn:focus-visible{outline:4px solid var(--gold); outline-offset:3px;}
+  .game-btn img{height:86px; width:auto;}
+  .game-btn .g-title{font-size:.95rem; line-height:1.15; color:var(--ink); text-align:center;}
+  .game-btn .g-state{
+    font-size:.75rem; font-weight:800; padding:.25em 1em; border-radius:999px;
+    background:var(--moss); color:var(--white);
+  }
+  .game-btn.locked{
+    cursor:not-allowed; background:#e7ebe6; box-shadow:0 5px 0 #9aa79d; border-color:#9aa79d;
+  }
+  .game-btn.locked:hover,.game-btn.locked:active{transform:none; box-shadow:0 5px 0 #9aa79d;}
+  .game-btn.locked img{filter:grayscale(1) brightness(1.6) contrast(.55); opacity:.55;}
+  .game-btn.locked .g-title{color:#6b756f;}
+  .game-btn.locked .g-state{background:#9aa79d;}
+  .game-btn.nudge{animation:nudge .35s;}
+  #flightChallengeCard{display:none; flex-direction:column; align-items:center; margin-top:4px;}
+  #flightChallengeCard.show{display:flex;}
+  #flightChallengeBtn{max-width:200px;}
+  #flightChallengeBtn img{filter:drop-shadow(0 0 10px rgba(240,178,62,.7));}
+  @keyframes nudge{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+  .back-btn{
+    position:absolute; top:12px; left:12px; z-index:20;
+    font-family:'Baloo 2', sans-serif; font-weight:800; font-size:1rem;
+    background:var(--white); color:var(--ink);
+    border:3px solid var(--ink); border-radius:999px;
+    padding:.35em 1em .35em .8em; cursor:pointer;
+    box-shadow:0 4px 0 var(--ink);
+    transition:transform .08s, box-shadow .08s;
+  }
+  .back-btn:hover{transform:translateY(-1px); box-shadow:0 5px 0 var(--ink);}
+  .back-btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--ink);}
+  .back-btn:focus-visible{outline:4px solid var(--gold); outline-offset:3px;}
+  /* ---------- Black & Green Keepers ---------- */
+  #keepersScreen{padding:0;}
+  .kp-header{
+    width:100%; display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:6px 12px;
+    padding:12px 20px 12px 110px; background:var(--forest); color:var(--white);
+    border-bottom:3px solid var(--ink); position:relative;
+  }
+  .kp-header .back-btn{top:9px;}
+  .kp-header .display{font-size:1.05rem; font-weight:800;}
+  #kpSceneWrap{position:relative; width:100%; aspect-ratio:16/9; flex-shrink:0; overflow:hidden; border-bottom:3px solid var(--ink); background:#dfe6df;}
+  #kpSceneWrap > img.kp-bg{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  #kpSceneImgB{opacity:0; transition:opacity .8s ease;}
+  #kpPanel{flex:1; width:100%; padding:14px 20px; display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;}
+  #kpPanel p{font-weight:800; color:#3a4340; max-width:36em; margin:0;}
+  #kpTasks{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:2px;}
+  .kp-task-chip{
+    font-family:'Baloo 2'; font-weight:800; font-size:.78rem; padding:.3em 1em;
+    border-radius:999px; border:3px solid var(--ink); background:var(--white); color:var(--ink);
+  }
+  .kp-task-chip.done{background:var(--leaf); color:var(--white);}
+  #kpComplete{display:none; flex-direction:column; align-items:center; gap:10px; text-align:center;}
+  #kpComplete.show{display:flex;}
+
+  /* ---------- Keepers: clean-up sprint ---------- */
+  #kpSprintBar{
+    position:absolute; top:10px; right:10px; z-index:15;
+    background:var(--ink); color:var(--white); font-family:'Baloo 2'; font-weight:800;
+    border-radius:999px; padding:.35em 1.2em; display:none; gap:14px; font-size:.85rem;
+    border:3px solid var(--white); box-shadow:0 4px 0 rgba(0,0,0,.3);
+    pointer-events:none; flex-wrap:wrap; justify-content:flex-end; max-width:min(70%, 320px);
+  }
+  #kpSprintBar.show{display:flex;}
+  #kpSprintBar .low{color:#ffb3b3;}
+  .kp-litter{
+    position:absolute; transform:translate(-50%,-50%);
+    font-size:clamp(1.5rem, 5vw, 2.3rem); background:none; border:none; cursor:pointer; padding:0;
+    filter:drop-shadow(0 3px 2px rgba(22,23,27,.35)); z-index:7; line-height:1;
+    animation:ttCelebratePop .3s ease; width:9%; min-width:42px;
+  }
+  .kp-litter img{width:100%; height:auto; display:block; pointer-events:none;}
+  .kp-litter.gone{animation:kpLitterGone .35s ease-in forwards;}
+  @keyframes kpLitterGone{to{transform:translate(-50%,-50%) scale(.1) rotate(20deg); opacity:0;}}
+  .kp-fix{
+    position:absolute; transform:translate(-50%,-50%); width:9%; min-width:42px; min-height:42px; aspect-ratio:1;
+    border-radius:50%; border:3px solid var(--gold-dark); background:rgba(240,178,62,.42);
+    cursor:pointer; z-index:7; animation:pulseRing 1.5s ease-out infinite;
+    display:flex; align-items:center; justify-content:center; font-size:1.3rem;
+  }
+  #kpSprintEnd{display:none; flex-direction:column; align-items:center; gap:8px; text-align:center;}
+  #kpSprintEnd.show{display:flex;}
+
+  #comingSoonScreen{justify-content:flex-start; text-align:center; gap:10px; padding:26px; overflow-y:auto;}
+  #comingSoonScreen img{height:150px;}
+  #comingSoonScreen h2{font-size:1.9rem; margin:.2em 0;}
+  #comingSoonScreen p{max-width:30em; font-weight:700; color:#3a4340; margin:.2em 0;}
+
+  #soundToggleBtn{
+    position:absolute; bottom:10px; left:12px; z-index:30;
+    font-size:1.2rem; background:var(--white); border:3px solid var(--ink);
+    border-radius:50%; width:38px; height:38px; cursor:pointer;
+    box-shadow:0 3px 0 var(--ink); line-height:1;
+  }
+
+
+  /* ---------- First Day Adventure ---------- */
+  #adventureScreen{padding:0;}
+  .adv-header{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+    padding:12px 20px 12px 110px; background:var(--forest); color:var(--white);
+    border-bottom:3px solid var(--ink); position:relative;
+  }
+  .adv-header .back-btn{top:9px;}
+  .adv-header .display{font-size:1.1rem; font-weight:800;}
+  #mapWrap{
+    position:relative; width:100%; aspect-ratio:3/2; flex-shrink:0;
+    background:#bfe0f5; overflow:hidden; border-bottom:3px solid var(--ink);
+  }
+  #mapWrap img.map{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  #mapB{opacity:0; transition:opacity 1.2s ease;}
+  .hotspot{
+    position:absolute; width:6%; min-width:42px; min-height:42px; aspect-ratio:1; transform:translate(-50%,-50%);
+    border-radius:50%; border:3px solid var(--gold-dark);
+    background:rgba(240,178,62,.42); cursor:pointer; z-index:6; padding:0;
+    animation:pulseRing 1.5s ease-out infinite;
+  }
+  .hotspot:focus-visible{outline:4px solid var(--gold); outline-offset:3px;}
+  .hotspot.no{animation:nudge .35s;}
+  .hotspot.done{
+    animation:none; cursor:default; background:var(--gold);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2'; font-weight:800; color:var(--ink);
+    font-size:clamp(.7rem, 2.2vw, 1.1rem);
+  }
+  @keyframes pulseRing{
+    0%{box-shadow:0 0 0 0 rgba(240,178,62,.75);}
+    70%{box-shadow:0 0 0 16px rgba(240,178,62,0);}
+    100%{box-shadow:0 0 0 0 rgba(240,178,62,0);}
+  }
+  #advZiggy{
+    position:absolute; width:10%; z-index:5; cursor:pointer;
+    transform:translate(-50%,-92%); border:none; background:none; padding:0;
+    transition-property:left, top; transition-timing-function:ease-in-out;
+  }
+  #advZiggy:focus-visible{outline:4px solid var(--gold); outline-offset:4px; border-radius:12px;}
+  #advZiggy .ziggy-img{
+    filter:drop-shadow(0 0 8px rgba(240,178,62,.95)) drop-shadow(0 0 20px rgba(240,178,62,.55));
+    animation:glowPulse 1.5s ease-in-out infinite;
+  }
+  #advZiggy.walking .ziggy-img, #advZiggy.arrived .ziggy-img{filter:none; animation:none;}
+  #advZiggy.walking{animation:hop .32s ease-in-out infinite alternate;}
+  @keyframes glowPulse{50%{filter:drop-shadow(0 0 14px rgba(240,178,62,1)) drop-shadow(0 0 30px rgba(240,178,62,.8));}}
+  @keyframes hop{from{margin-top:0}to{margin-top:-1.6%}}
+  #clickMe{
+    position:absolute; bottom:108%; left:50%; transform:translateX(-50%);
+    background:var(--gold); color:var(--ink); border:3px solid var(--ink);
+    border-radius:999px; padding:.3em .9em; white-space:nowrap;
+    font-family:'Baloo 2'; font-weight:800; font-size:clamp(.6rem, 2vw, .95rem);
+    animation:bob 1.4s ease-in-out infinite; pointer-events:none;
+  }
+  #clickMe::after{
+    content:""; position:absolute; top:100%; left:50%; transform:translateX(-50%);
+    border:7px solid transparent; border-top-color:var(--ink);
+  }
+  .rot-btn{
+    position:absolute; bottom:10px; z-index:8; width:46px; height:46px;
+    border-radius:50%; border:3px solid var(--ink); background:var(--white);
+    font-size:1.5rem; font-weight:800; cursor:pointer; display:none;
+    box-shadow:0 4px 0 var(--ink); line-height:1;
+  }
+  .rot-btn:hover{transform:translateY(-1px);}
+  .rot-btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--ink);}
+  .rot-btn:focus-visible{outline:4px solid var(--gold); outline-offset:3px;}
+  #rotL{left:10px;} #rotR{right:10px;}
+  #mapWrap.exploring .rot-btn{display:block;}
+  .hotspot.seen{background:var(--gold); animation:none;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2'; font-weight:800; color:var(--ink);}
+  #advPanel{
+    flex:1; width:100%; padding:14px 20px; overflow-y:auto;
+    display:flex; flex-direction:column; align-items:center; gap:8px; text-align:center;
+  }
+  #advPanel .prompt{font-weight:800; color:#3a4340; margin:0;}
+  #advPanel h3{margin:.1em 0; font-size:1.25rem;}
+  .answers{display:flex; flex-direction:column; gap:8px; width:100%; max-width:460px;}
+  .answer-btn{
+    font-family:'Nunito'; font-weight:800; font-size:.95rem;
+    background:var(--white); border:3px solid var(--ink); border-radius:14px;
+    padding:.6em 1em; cursor:pointer; box-shadow:0 4px 0 var(--ink);
+    transition:transform .08s, box-shadow .08s;
+  }
+  .answer-btn:hover{transform:translateY(-1px); box-shadow:0 5px 0 var(--ink);}
+  .answer-btn:focus-visible{outline:4px solid var(--gold); outline-offset:2px;}
+  .answer-btn.correct{background:#e6f0e2; border-color:var(--leaf);}
+  .answer-btn.wrong{animation:nudge .35s; background:#f4e5e5;}
+  .adv-tip{font-size:.85rem; font-weight:700; color:var(--moss); max-width:34em;}
+
+  /* ---------- Timetable Challenge ---------- */
+  .tt-wrap{position:relative; width:100%; flex-shrink:0; overflow:hidden; border-bottom:3px solid var(--ink);}
+  .tt-wrap img.tt-bg{position:absolute; inset:0; width:100%; height:100%; display:block;}
+  .hotspot.big{width:9%; animation-duration:1s;}
+  #ttPackScreen .pack-top{
+    width:100%; display:flex; justify-content:space-between; align-items:center; gap:10px;
+    padding:10px 16px; background:var(--gold); border-bottom:3px solid var(--ink);
+    font-family:'Baloo 2'; font-weight:800; flex-wrap:wrap;
+  }
+  #ttDay{font-size:1.05rem;}
+  #ttTimer{font-size:1.3rem; background:var(--ink); color:var(--white); border-radius:999px; padding:.15em .8em;}
+  #ttTimer.low{background:#a33; animation:pulseT .5s infinite alternate;}
+  @keyframes pulseT{to{transform:scale(1.12);}}
+  #packMain{flex:1; width:100%; display:flex; gap:14px; padding:12px 16px; overflow:auto; flex-wrap:wrap; align-content:flex-start; justify-content:center;}
+  #ttCard{perspective:900px; cursor:pointer; width:min(420px, 96%); flex-shrink:0;}
+  #ttZoomBtn{
+    display:block; margin:8px auto 0; font-family:'Baloo 2'; font-weight:800; font-size:.85rem;
+    background:var(--white); border:3px solid var(--ink); border-radius:999px;
+    padding:.35em 1.1em; cursor:pointer; box-shadow:0 4px 0 var(--ink);
+  }
+  #ttZoomOverlay{
+    display:none; position:absolute; inset:0; z-index:40; background:rgba(22,23,27,.85);
+    align-items:center; justify-content:center; padding:24px;
+  }
+  #ttZoomOverlay.open{display:flex;}
+  #ttZoomInner{position:relative; width:min(94%, 760px);}
+  #ttZoomImg{width:100%; display:block; border:4px solid var(--white); border-radius:14px; box-shadow:0 8px 0 rgba(0,0,0,.4); cursor:pointer;}
+  #ttZoomHint{text-align:center; color:var(--white); font-weight:800; font-size:.8rem; margin-top:8px;}
+  #ttZoomClose{
+    position:absolute; top:-46px; right:0; font-family:'Baloo 2'; font-weight:800;
+    background:var(--gold); border:3px solid var(--ink); border-radius:999px;
+    padding:.3em 1em; cursor:pointer; box-shadow:0 4px 0 var(--ink);
+  }
+  #ttCelebrate{
+    position:absolute; top:48%; left:38%; width:min(32vw, 160px);
+    transform:translate(-50%,-50%);
+    z-index:20; display:none; pointer-events:none;
+    filter:drop-shadow(0 6px 6px rgba(22,23,27,.35));
+  }
+  #ttCelebrate.show{display:block; animation:ttCelebratePop .55s cubic-bezier(.34,1.56,.64,1);}
+  @keyframes ttCelebratePop{
+    0%{transform:translate(-50%,-50%) scale(0) rotate(-15deg); opacity:0;}
+    70%{transform:translate(-50%,-50%) scale(1.15) rotate(4deg); opacity:1;}
+    100%{transform:translate(-50%,-50%) scale(1) rotate(0deg); opacity:1;}
+  }
+  #ttCardInner{position:relative; width:100%; aspect-ratio:582/324; transform-style:preserve-3d; transition:transform .5s;}
+  #ttCard.flipB #ttCardInner{transform:rotateY(180deg);}
+  #ttCardInner img{
+    position:absolute; inset:0; width:100%; height:100%; backface-visibility:hidden;
+    border:3px solid var(--ink); border-radius:12px; box-shadow:var(--shadow);
+  }
+  #ttCardInner img.backface{transform:rotateY(180deg);}
+  .tt-flip-hint{text-align:center; font-size:.75rem; font-weight:800; color:#4a534f; margin-top:4px;}
+  #bookShelf{display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:10px; align-content:flex-start;}
+  .book-btn{
+    aspect-ratio:3/4; border:3px solid var(--ink); border-radius:4px 9px 9px 4px;
+    cursor:pointer; box-shadow:0 4px 0 var(--ink), inset -4px 0 0 rgba(0,0,0,.18);
+    position:relative; transition:transform .08s, opacity .3s;
+    display:flex; align-items:flex-start; justify-content:center; padding-top:14%;
+  }
+  .book-btn:hover{transform:translateY(-2px);}
+  .book-btn:focus-visible{outline:4px solid var(--gold); outline-offset:2px;}
+  .book-btn.packed{transform:scale(.1) rotate(20deg); opacity:0; pointer-events:none;}
+  .book-btn.no{animation:nudge .35s;}
+  .book-label{
+    width:80%; background:#f4efdd; border:2px solid rgba(22,23,27,.8); border-radius:2px;
+    padding:10% 6%; display:flex; align-items:center; justify-content:center; text-align:center;
+    background-image:repeating-linear-gradient(to bottom,
+      transparent 0, transparent calc(20% - 1px), rgba(60,55,40,.28) calc(20% - 1px), rgba(60,55,40,.28) 20%);
+  }
+  .book-label span{
+    font-family:'Nunito'; font-weight:800; color:var(--ink); font-size:.66rem; line-height:1.15;
+    text-shadow:0 1px 0 rgba(255,255,255,.4);
+  }
+  #ttBagRow{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:10px;
+    padding:8px 16px 12px; font-family:'Baloo 2'; font-weight:800; font-size:1.1rem;
+  }
+  #ttBagIcon{font-size:2rem; display:inline-block;}
+  #ttBagIcon.bounce{animation:pop .4s;}
+  #ttFeedback{min-height:1.5em; text-align:center; font-weight:800; color:var(--moss); padding:0 16px;}
+
+  @media (prefers-reduced-motion:reduce){
+    .bob,#clickMe,#advZiggy.walking,.hotspot{animation:none;}
+    #advZiggy .ziggy-img{animation:none;}
+    .card-inner{transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ==========================================================
+     EDIT ME!  School staff: change the school name and values
+     below. Each value needs a "word" and a short "meaning".
+     6 values = 12 cards. Keep meanings short and kid-friendly.
+     ========================================================== -->
+<script>
+const SCHOOL_CONFIG = {
+  schoolName: "Ravens Wood School",
+  brandLine: "We are Black & Green",
+  mascotName: "Ziggy",
+  // The Black & Green Values — condensed from the RWS Student Book
+  values: [
+    { word: "Kindness",  meaning: "Compassion, empathy and understanding — acts of kindness are celebrated" },
+    { word: "Respect",   meaning: "Everyone is valued and treated with dignity" },
+    { word: "Pride",     meaning: "We take pride in our achievements, our school and each other" },
+    { word: "Integrity", meaning: "We do the right thing, even when no one is watching" },
+    { word: "Ambition",  meaning: "We dream big, set goals and strive for excellence" },
+    { word: "Community", meaning: "We support and uplift each other — everyone belongs" },
+  ],
+  flightSeconds: 45,   // length of the flying round
+  // Games unlocked by total score — thresholds are easy to tune
+  unlockGames: [
+    { id:"firstday",  title:"Ziggy's First Day Adventure", pose:"excited", threshold:500 },
+    { id:"timetable", title:"Ziggy's Timetable Challenge", pose:"reading", threshold:600 },
+    { id:"grandquiz", title:"Black & Green Keepers",       pose:"trophy",  threshold:700 },
+  ],
+};
+</script>
+
+<div id="app">
+
+  <noscript>
+    <div style="position:absolute; inset:0; z-index:99; background:#f2f6f0; border-radius:28px;
+                display:flex; flex-direction:column; align-items:center; justify-content:center;
+                text-align:center; padding:30px; gap:10px; font-weight:700;">
+      <h2 style="margin:0">One more step! 🐦</h2>
+      <p style="max-width:30em; margin:0">You're probably viewing this file in an email or drive
+        <b>preview</b>, which switches the game off. To play:</p>
+      <p style="max-width:30em; margin:0">1&#41; <b>Download</b> this file &nbsp;
+        2&#41; Open your <b>Downloads</b> folder &nbsp;
+        3&#41; <b>Double-click</b> it to open in Chrome, Edge or Safari.</p>
+    </div>
+  </noscript>
+
+  <!-- ================= TITLE ================= -->
+  <section class="screen active" id="loadingScreen">
+    <div id="loaderStage"></div>
+    <p id="loaderText">Getting Ziggy ready&hellip;</p>
+    <div id="loaderBarTrack"><div id="loaderBarFill"></div></div>
+    <button id="loaderContinueBtn" class="btn">Let's go! 🐦</button>
+  </section>
+
+  <section class="screen" id="titleScreen">
+    <div class="bob title-ziggy" id="titleZiggy"></div>
+    <div class="eyebrow"><span id="schoolName"></span> · <span id="brandLine"></span></div>
+    <h1>Ziggy's Black &amp; Green Quest</h1>
+    <p>Help <b>Ziggy the raven</b> learn our Black &amp; Green values! Match the pairs, and every match gives
+       Ziggy a <b>shield feather</b> for his flight over the school. 🪶</p>
+    <p style="font-size:.85rem">Round 1: Memory match &nbsp;→&nbsp; Round 2: Fly &amp; collect stars</p>
+    <button class="btn" id="startBtn">Start the quest</button>
+    <p id="welcomeBack" style="display:none; font-size:.85rem; font-weight:700; color:var(--leaf); margin:.3em 0 0"></p>
+    <button id="resetProgressBtn" style="display:none; background:none; border:none; text-decoration:underline;
+      font-family:'Nunito'; font-weight:700; font-size:.75rem; color:#6b756f; cursor:pointer; margin-top:2px;">
+      Start fresh (clear my saved progress)
+    </button>
+
+    <button id="soundToggleBtn" title="Mute/unmute sound">🔊</button>
+
+  </section>
+
+  <!-- ================= MEMORY ================= -->
+  <section class="screen" id="memoryScreen">
+    <button class="back-btn" data-back-home aria-label="Back to the home screen">&larr; Back</button>
+    <div class="hud">
+      <span class="display stat">🧠 Pairs: <span id="pairsFound">0</span>/<span id="pairsTotal">6</span></span>
+      <span class="display stat">Feathers: <span class="feather-count" id="featherHud"></span></span>
+      <span class="display stat">Moves: <span id="moves">0</span></span>
+    </div>
+    <p id="memoryIntro">Match each <b>Black &amp; Green value</b> to what it <b>means</b>. Every pair = one shield feather for Ziggy!</p>
+    <div id="board" role="grid" aria-label="Memory cards"></div>
+    <div id="matchToast" aria-live="polite"></div>
+  </section>
+
+  <!-- ================= POWER-UP INTERSTITIAL ================= -->
+  <section class="screen" id="powerScreen">
+    <div class="title-ziggy" style="width:150px" id="powerZiggy"></div>
+    <h2>Brilliant matching!</h2>
+    <p id="powerText"></p>
+    <div id="shieldRow"></div>
+    <p>Now fly Ziggy over the school. <b>Tap / hold</b> (or press <b>space</b>) to flap up.
+       Collect ⭐ stars, dodge the rainclouds — your shield feathers will protect you!</p>
+    <button class="btn" id="flyBtn">Take off! 🕊️</button>
+  </section>
+
+  <!-- ================= FLIGHT ================= -->
+  <section class="screen" id="flightScreen">
+    <div class="hud">
+      <span class="display stat">⭐ <span id="flightScore">0</span></span>
+      <span class="display stat">Shields: <span class="feather-count" id="shieldHud"></span></span>
+      <span class="display stat" id="flightTimerStat">⏱ <span id="flightTime">45</span>s</span>
+      <span class="display stat" id="flightLevelStat" style="display:none;">🏆 Level <span id="flightLevelNum">1</span>/10</span>
+    </div>
+    <div id="sky">
+      <div id="flightGateOverlay">
+        <div id="flightGateBarTrack"><div id="flightGateBarFill"></div></div>
+        <p id="flightGatePrompt"></p>
+        <div class="answers" id="flightGateAnswers"></div>
+      </div>
+      <div id="flightGameOver">
+        <h3>Game Over!</h3>
+        <p id="flightGameOverText"></p>
+        <button class="btn" id="flightGameOverBtn">Back to games</button>
+      </div>
+      <svg id="skyline" viewBox="0 0 760 120" preserveAspectRatio="none" aria-hidden="true">
+        <rect x="0" y="90" width="760" height="30" fill="#cfdccb"/>
+        <rect x="40" y="46" width="150" height="74" rx="6" fill="#b9cbb4"/>
+        <rect x="95" y="18" width="40" height="46" rx="4" fill="#b9cbb4"/>
+        <rect x="112" y="8" width="6" height="14" fill="#9db199"/>
+        <rect x="230" y="60" width="220" height="60" rx="6" fill="#aec2a9"/>
+        <rect x="250" y="74" width="26" height="20" rx="3" fill="#f2f6f0"/>
+        <rect x="292" y="74" width="26" height="20" rx="3" fill="#f2f6f0"/>
+        <rect x="334" y="74" width="26" height="20" rx="3" fill="#f2f6f0"/>
+        <rect x="376" y="74" width="26" height="20" rx="3" fill="#f2f6f0"/>
+        <rect x="480" y="40" width="120" height="80" rx="6" fill="#b9cbb4"/>
+        <path d="M470 44 L540 10 L610 44 Z" fill="#9db199"/>
+        <rect x="640" y="70" width="90" height="50" rx="6" fill="#aec2a9"/>
+        <circle cx="20" cy="96" r="18" fill="#8fae87"/>
+        <rect x="17" y="100" width="6" height="20" fill="#6f8a68"/>
+        <circle cx="740" cy="92" r="22" fill="#8fae87"/>
+        <rect x="737" y="98" width="6" height="22" fill="#6f8a68"/>
+      </svg>
+      <div class="entity" id="player"></div>
+      <div id="flightMsg"></div>
+      <div id="tapHint">Tap / hold to flap &nbsp;·&nbsp; Space works too</div>
+    </div>
+  </section>
+
+  <!-- ================= RESULTS ================= -->
+  <section class="screen" id="resultScreen">
+    <div class="title-ziggy" style="width:130px" id="resultZiggy"></div>
+    <h2 id="resultTitle">Quest complete!</h2>
+    <div class="eyebrow">Total score</div>
+    <div id="finalScore">0</div>
+    <p style="font-weight:700; color:#3a4340; margin:.3em 0">Remember the Black &amp; Green values — they're yours now too:</p>
+    <div id="valuesRecap"></div>
+    <div class="eyebrow" id="unlockHead">More games</div>
+    <p id="bestTotalNote" style="font-family:'Baloo 2'; font-weight:800; color:var(--moss); margin:2px 0 6px; font-size:1rem;"></p>
+    <div id="unlockRow"></div>
+    <div id="flightChallengeCard">
+      <div class="eyebrow">Bonus challenge</div>
+      <button class="game-btn" id="flightChallengeBtn">
+        <img src="" alt="" draggable="false" id="flightChallengePose">
+        <span class="g-title">Ziggy Flight Challenge</span>
+        <span class="g-state">Play</span>
+      </button>
+      <p id="flightChallengeBest" style="font-size:.8rem; font-weight:700; color:var(--moss); margin:4px 0 0;"></p>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="againBtn">Play again</button>
+      <button class="btn secondary" id="freeExploreBtn">Explore the school 🗺️</button>
+    </div>
+  </section>
+
+  <!-- ================= FIRST DAY ADVENTURE ================= -->
+  <section class="screen" id="adventureScreen">
+    <div class="adv-header">
+      <button class="back-btn" data-back aria-label="Leave the adventure">&larr; Back</button>
+      <span class="display">Ziggy's First Day Adventure</span>
+    </div>
+    <div id="mapWrap">
+      <img class="map" id="mapA" alt="Aerial view of the school site" src="assets/img-41408f9fbf.webp">
+      <img class="map" id="mapB" alt="Aerial view of the school site from another angle">
+      <button id="advZiggy" aria-label="Ziggy — click to start walking">
+        <span id="clickMe">&#128070; Click me!</span>
+      </button>
+      <button class="rot-btn" id="rotL" aria-label="Rotate view anti-clockwise">&#10554;</button>
+      <button class="rot-btn" id="rotR" aria-label="Rotate view clockwise">&#10555;</button>
+    </div>
+    <div id="advPanel">
+      <p class="prompt" id="advPrompt">It's Ziggy's very first day at Ravens Wood! He's just come through the school entrance. Give him a click to get going.</p>
+      <div id="advContent"></div>
+    </div>
+  </section>
+
+
+  <!-- ================= TIMETABLE CHALLENGE ================= -->
+  <section class="screen" id="ttBedroomScreen">
+    <div class="adv-header">
+      <button class="back-btn" data-back aria-label="Leave the game">&larr; Back</button>
+      <span class="display">Ziggy's Timetable Challenge</span>
+    </div>
+    <div class="tt-wrap" id="ttRoomWrap" style="aspect-ratio:1402/1122; max-height:56%;">
+      <img class="tt-bg" alt="Ziggy's bedroom the night before school" src="assets/img-e7b08b91ef.webp">
+    </div>
+    <div id="advPanelTT" style="flex:1; width:100%; padding:12px 20px; overflow-y:auto; text-align:center;">
+      <p class="prompt" id="ttPrompt" style="font-weight:800; color:#3a4340; margin:.2em 0"></p>
+      <p class="adv-tip" id="ttTip" aria-live="polite" style="font-weight:700; color:var(--moss); margin:.2em 0"></p>
+    </div>
+  </section>
+
+  <section class="screen" id="ttPackScreen">
+    <div class="adv-header">
+      <button class="back-btn" data-back aria-label="Leave the game">&larr; Back</button>
+      <span class="display">Pack Ziggy's Bag!</span>
+    </div>
+    <div class="pack-top">
+      <span id="ttDay"></span>
+      <span id="ttTimer">60</span>
+    </div>
+    <div id="packMain">
+      <div>
+        <div id="ttCard" role="button" tabindex="0" aria-label="Ziggy's timetable card — tap to flip between Week A and Week B">
+          <div id="ttCardInner">
+            <img alt="Timetable card, Week A" src="assets/img-590360a6ab.webp">
+            <img class="backface" alt="Timetable card, Week B" src="assets/img-3bfda7449d.webp">
+          </div>
+        </div>
+        <p class="tt-flip-hint">&#128070; Tap the card to flip between Week A and Week B</p>
+        <button id="ttZoomBtn">&#128269; View bigger</button>
+      </div>
+      <div id="bookShelf"></div>
+    </div>
+    <p id="ttFeedback" aria-live="polite"></p>
+    <div id="ttBagRow"><span id="ttBagIcon">&#127890;</span> <span id="ttBagCount">0 / 5 packed</span></div>
+    <div id="ttZoomOverlay">
+      <div id="ttZoomInner">
+        <button id="ttZoomClose">&#10005; Close</button>
+        <img id="ttZoomImg" alt="Enlarged timetable card">
+        <p id="ttZoomHint">Tap the image to flip between Week A and Week B</p>
+      </div>
+    </div>
+    <img id="ttCelebrate" alt="Ziggy celebrating">
+  </section>
+
+  <!-- ================= BLACK & GREEN KEEPERS ================= -->
+  <section class="screen" id="keepersScreen">
+    <div class="kp-header">
+      <button class="back-btn" data-back aria-label="Leave Black &amp; Green Keepers">&larr; Back</button>
+      <span class="display" id="kpSceneLabel">Scene 1 of 4 &middot; The Form Room</span>
+    </div>
+    <div id="kpSceneWrap">
+      <img class="kp-bg" id="kpSceneImg" alt="A Ravens Wood classroom">
+      <img class="kp-bg" id="kpSceneImgB" alt="">
+      <div id="kpSprintBar">⏱ <span id="kpSprintTime">60</span>s &nbsp; 🧹 <span id="kpSprintCount">0</span>/<span id="kpSprintTotal">0</span> &nbsp; ⭐ <span id="kpSprintScore">0</span></div>
+    </div>
+    <div id="kpPanel">
+      <p id="kpPrompt">It's the end of the day. Check the rota, then make sure the Form Room is left ready for the next class!</p>
+      <div id="kpTasks"></div>
+      <div id="kpSprintEnd">
+        <h3 id="kpSprintTitle" style="margin:.1em 0">Room clear! 🎉</h3>
+        <p id="kpSprintText"></p>
+        <div class="btn-row">
+          <button class="btn" id="kpSprintRetry">Try the clean-up again</button>
+          <button class="btn secondary" id="kpSprintContinue">Continue</button>
+        </div>
+      </div>
+      <div id="kpComplete">
+        <h3 style="margin:.1em 0">Great work, Keeper! 🌟</h3>
+        <p>You've left the Form Room Black &amp; Green ready.</p>
+        <p style="font-size:.85rem">The canteen and the school site scenes are coming soon.</p>
+        <button class="btn secondary" data-back>Back to choose another game</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= COMING SOON (game stubs) ================= -->
+  <section class="screen" id="comingSoonScreen">
+    <button class="back-btn" data-back aria-label="Back to my score">&larr; Back</button>
+    <img id="csPose" alt="" draggable="false">
+    <h2 id="csTitle"></h2>
+    <p><b>You've unlocked this game!</b></p>
+    <p id="csBlurb"></p>
+    <p>It's still being built — check back soon.</p>
+    <button class="btn secondary" data-back>Choose another game</button>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   ZIGGY — the official Ravens Wood mascot idle animation
+   (embedded animated WebP, cropped from the supplied frames)
+   ============================================================ */
+const ZIGGY_ANIM = "assets/img-aaea9601e6.webp";
+const ZIGGY_GLIDE = "assets/img-d251aa2e34.webp";
+const ZIGGY_FLAP  = "assets/img-7ca0f1f322.webp";
+const ZIGGY_POSES = {
+  excited: "assets/img-9216c1f5ed.webp",
+  reading: "assets/img-908fa51925.webp",
+  trophy:  "assets/img-e04775b590.webp",
+};
+function ziggyImg(cls=""){
+  return `<img class="ziggy-img ${cls}" src="${ZIGGY_ANIM}" alt="Ziggy the Ravens Wood mascot" draggable="false"
+          onerror="if(this.src!==ZIGGY_GLIDE)this.src=ZIGGY_GLIDE">`;
+}
+
+/* Card-back motif: Ziggy's scallop feathers + a star */
+const CARD_BACK = `
+  <svg viewBox="0 0 100 100" aria-hidden="true">
+    <g fill="#2c4533" opacity=".85">
+      <path d="M14 30 a11 11 0 0 0 22 0 z"/><path d="M39 30 a11 11 0 0 0 22 0 z"/><path d="M64 30 a11 11 0 0 0 22 0 z"/>
+      <path d="M26 48 a11 11 0 0 0 22 0 z"/><path d="M51 48 a11 11 0 0 0 22 0 z"/>
+    </g>
+    <path d="M50 62 l5 10 11 2 -8 8 2 11 -10 -5 -10 5 2 -11 -8 -8 11 -2 z" fill="#f0b23e" stroke="#16171b" stroke-width="3" stroke-linejoin="round"/>
+  </svg>`;
+
+const STAR_SVG = `
+  <svg viewBox="0 0 40 40" aria-hidden="true">
+    <path d="M20 3 l5 11 12 2 -9 9 2 12 -10 -6 -10 6 2 -12 -9 -9 12 -2 z"
+      fill="#f0b23e" stroke="#16171b" stroke-width="2.5" stroke-linejoin="round"/>
+  </svg>`;
+
+const CLOUD_SVG = `
+  <svg viewBox="0 0 70 48" aria-hidden="true">
+    <g>
+      <ellipse cx="24" cy="24" rx="18" ry="14" fill="#8a93a3"/>
+      <ellipse cx="44" cy="20" rx="18" ry="14" fill="#9aa2b0"/>
+      <ellipse cx="35" cy="30" rx="22" ry="13" fill="#8a93a3"/>
+      <path d="M22 42 l-4 6 M34 42 l-4 6 M46 42 l-4 6" stroke="#6b7382" stroke-width="3" stroke-linecap="round"/>
+    </g>
+  </svg>`;
+
+/* ============================================================
+   App state + screen management
+   ============================================================ */
+const $ = s => document.querySelector(s);
+/* Screen switcher — works on every element with class="screen",
+   so newly added screens are always included automatically. */
+function show(id){
+  document.querySelectorAll(".screen").forEach(el =>
+    el.classList.toggle("active", el.id === id));
+  // the unlock buttons must reflect the latest combined score every time this
+  // screen appears — not just right after a fresh memory+flight playthrough
+  if(id === "resultScreen" && typeof renderUnlocks === "function") renderUnlocks(state.bestScore);
+}
+const state = {
+  pairsFound:0, moves:0, shields:0,
+  memoryScore:0, flightScore:0,
+  bestScore:0,          // combined total that drives the unlock thresholds
+  bestMemoryFlight:0,   // best single memory+flight run
+  bestTimetable:0,      // best single Timetable Challenge pack
+  bestKeepers:0,        // best single Black & Green Keepers session
+  adventureDone:false,  // First Day Adventure story completed at least once
+  bestFlightChallenge:0, // separate leaderboard — does NOT count toward the unlock total
+};
+const ADVENTURE_COMPLETE_BONUS = 150;
+
+function recomputeBestScore(){
+  state.bestScore = state.bestMemoryFlight + state.bestTimetable + state.bestKeepers +
+    (state.adventureDone ? ADVENTURE_COMPLETE_BONUS : 0);
+  saveProgress();
+}
+
+/* Any time Black & Green Keepers' running score changes, fold its best
+   showing into the combined total that drives the game unlocks. */
+function syncKeepersScore(){
+  state.bestKeepers = Math.max(state.bestKeepers, kp.totalScore);
+  recomputeBestScore();
+}
+
+/* ============================================================
+   PROGRESS STORAGE — remembers a student's best score on this
+   device/browser between visits, so unlocked games stay unlocked.
+   Nothing is sent anywhere; it never leaves this browser, and no
+   name or personal info is stored — just a score.
+   ============================================================ */
+const PROGRESS_KEY = "ziggyQuestProgress_v1";
+
+function loadProgress(){
+  try{
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    if(typeof data.bestMemoryFlight === "number") state.bestMemoryFlight = data.bestMemoryFlight;
+    if(typeof data.bestTimetable === "number") state.bestTimetable = data.bestTimetable;
+    if(typeof data.bestKeepers === "number") state.bestKeepers = data.bestKeepers;
+    if(typeof data.bestFlightChallenge === "number") state.bestFlightChallenge = data.bestFlightChallenge;
+    if(data.adventureDone) state.adventureDone = true;
+    state.bestScore = state.bestMemoryFlight + state.bestTimetable + state.bestKeepers +
+      (state.adventureDone ? ADVENTURE_COMPLETE_BONUS : 0);
+    if(state.bestScore > 0){
+      const note = $("#welcomeBack");
+      note.textContent = `Welcome back! Your best score so far is ${state.bestScore}.`;
+      note.style.display = "block";
+      $("#resetProgressBtn").style.display = "inline";
+    }
+  } catch(e){
+    // localStorage unavailable (private browsing, or opened as a local file in some browsers) — game still works, it just won't remember between visits
+  }
+}
+
+function saveProgress(){
+  try{
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+      bestMemoryFlight: state.bestMemoryFlight,
+      bestTimetable: state.bestTimetable,
+      bestKeepers: state.bestKeepers,
+      bestFlightChallenge: state.bestFlightChallenge,
+      adventureDone: state.adventureDone,
+    }));
+  } catch(e){ /* storage unavailable — fail silently, nothing else is affected */ }
+}
+
+
+/* ============================================================
+   SOUND EFFECTS — two sounds only:
+   - "confirm" on Let's go / choosing a game / going back
+   - "select"  on any correct answer, anywhere in the game
+   Muted state is remembered between visits. Sound defaults ON,
+   but is easy to mute for a quiet classroom.
+   ============================================================ */
+const SFX_CONFIRM = new Audio("assets/sfx-fcf8d1830c.mp3");
+const SFX_SELECT  = new Audio("assets/sfx-fa4f21163e.mp3");
+let soundOn = true;
+try{ soundOn = localStorage.getItem("ziggySoundOn") !== "off"; } catch(e){}
+
+function playConfirm(){ if(!soundOn) return; try{ SFX_CONFIRM.currentTime=0; SFX_CONFIRM.play().catch(()=>{}); }catch(e){} }
+function playSelect(){ if(!soundOn) return; try{ SFX_SELECT.currentTime=0; SFX_SELECT.play().catch(()=>{}); }catch(e){} }
+
+function updateSoundBtn(){
+  const b = document.getElementById("soundToggleBtn");
+  if(b) b.textContent = soundOn ? "🔊" : "🔇";
+}
+document.addEventListener("click", e=>{
+  if(e.target && e.target.id === "soundToggleBtn"){
+    soundOn = !soundOn;
+    try{ localStorage.setItem("ziggySoundOn", soundOn ? "on" : "off"); }catch(err){}
+    updateSoundBtn();
+  }
+});
+
+loadProgress();
+updateSoundBtn();
+
+/* ============================================================
+   LOADING SCREEN — a branded splash while the page settles in,
+   cycling through Ziggy's poses. Runs for at least 3 seconds
+   (16 poses x 350ms ≈ 5.6s) so a couple of poses are always seen,
+   then hands off to the title screen automatically.
+   ============================================================ */
+const LOADER_POSES = ["assets/img-7efb4e578d.webp", "assets/img-997c34e2d9.webp", "assets/img-21581efb9d.webp", "assets/img-5c72f10672.webp", "assets/img-5733584e70.webp", "assets/img-27d348b53a.webp", "assets/img-1e00af6c9e.webp", "assets/img-e213e0cccc.webp", "assets/img-950ba5d9aa.webp", "assets/img-d4f4dce60c.webp", "assets/img-ff36525b2f.webp", "assets/img-cda0783ff8.webp", "assets/img-eedaf589b2.webp", "assets/img-e18266e439.webp", "assets/img-970ba2670b.webp", "assets/img-0ac1ce10c4.webp"];
+
+function startLoader(){
+  const stage = document.getElementById("loaderStage");
+  LOADER_POSES.forEach((src,i)=>{
+    const img = document.createElement("img");
+    img.src = src;
+    img.alt = "";
+    if(i===0) img.classList.add("on");
+    stage.appendChild(img);
+  });
+  const imgs = stage.querySelectorAll("img");
+  const barTime = 3000;   // the bar itself takes a visible 3 seconds to fill
+
+  const fill = document.getElementById("loaderBarFill");
+  fill.style.transitionDuration = barTime + "ms";
+  fill.style.width = "0%";
+  void fill.offsetWidth;   // force the browser to commit the 0% state before animating —
+                            // a single rAF isn't always enough to avoid an instant jump
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{ fill.style.width = "100%"; });
+  });
+
+  // poses fade to a random different one every second, and keep going for as
+  // long as the student stays on this screen — not tied to the bar's timing
+  let idx = 0;
+  const iv = setInterval(()=>{
+    imgs[idx].classList.remove("on");
+    let next = idx;
+    while(next === idx) next = Math.floor(Math.random() * imgs.length);
+    idx = next;
+    imgs[idx].classList.add("on");
+  }, 1000);
+
+  // once the bar finishes, offer a button — the student can move on
+  // immediately, or just keep watching Ziggy for as long as they like
+  setTimeout(()=>{
+    document.getElementById("loaderContinueBtn").classList.add("show");
+  }, barTime);
+
+  document.getElementById("loaderContinueBtn").addEventListener("click", ()=>{
+    playConfirm();
+    clearInterval(iv);
+    show("titleScreen");
+  });
+}
+startLoader();
+
+$("#resetProgressBtn").addEventListener("click", ()=>{
+  if(!confirm("This clears your saved best score and locks the bonus games again on this device. Continue?")) return;
+  try{ localStorage.removeItem(PROGRESS_KEY); } catch(e){}
+  state.bestScore = 0;
+  state.bestMemoryFlight = 0;
+  state.bestTimetable = 0;
+  state.bestKeepers = 0;
+  state.bestFlightChallenge = 0;
+  state.adventureDone = false;
+  $("#welcomeBack").style.display = "none";
+  $("#resetProgressBtn").style.display = "none";
+});
+
+/* ---------- title ---------- */
+$("#schoolName").textContent = SCHOOL_CONFIG.schoolName;
+$("#brandLine").textContent = SCHOOL_CONFIG.brandLine;
+$("#titleZiggy").innerHTML = ziggyImg();
+$("#startBtn").addEventListener("click", startMemory);
+
+
+
+/* ============================================================
+   ROUND 1 — MEMORY MATCH
+   Match each value WORD card to its MEANING card.
+   ============================================================ */
+let first=null, lock=false;
+
+function startMemory(){
+  state.pairsFound=0; state.moves=0; state.shields=0;
+  first=null; lock=false;
+  $("#pairsTotal").textContent = SCHOOL_CONFIG.values.length;
+  $("#pairsFound").textContent = 0;
+  $("#moves").textContent = 0;
+  $("#matchToast").textContent = "";
+  renderFeathers($("#featherHud"), 0, SCHOOL_CONFIG.values.length);
+
+  // build deck: for each value, one WORD card + one MEANING card
+  const deck = [];
+  SCHOOL_CONFIG.values.forEach((v,i)=>{
+    deck.push({pair:i, kind:"word", text:v.word});
+    deck.push({pair:i, kind:"meaning", text:v.meaning});
+  });
+  // shuffle
+  for(let i=deck.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [deck[i],deck[j]]=[deck[j],deck[i]];
+  }
+
+  const board = $("#board");
+  board.innerHTML = "";
+  deck.forEach(c=>{
+    const btn = document.createElement("button");
+    btn.className = "card";
+    btn.dataset.pair = c.pair;
+    btn.setAttribute("aria-label","Hidden card");
+    btn.innerHTML = `
+      <div class="card-inner">
+        <div class="card-face card-back">${CARD_BACK}</div>
+        <div class="card-face card-front">
+          ${c.kind==="word"
+            ? `<span class="word">${c.text}</span>`
+            : `<span class="meaning">${c.text}</span>`}
+        </div>
+      </div>`;
+    btn.addEventListener("click", ()=>flip(btn));
+    board.appendChild(btn);
+  });
+  show("memoryScreen");
+}
+
+function renderFeathers(el, filled, total){
+  el.innerHTML = "";
+  for(let i=0;i<total;i++){
+    const f = document.createElement("span");
+    f.className = "feather" + (i<filled ? "" : " dim");
+    el.appendChild(f);
+  }
+}
+
+const CHEERS = ["Great match! +1 shield feather 🪶","Ziggy loves it! +1 feather 🪶",
+  "Spot on! Another feather 🪶","You know your values! +1 🪶"];
+
+function flip(card){
+  if(lock || card.classList.contains("flipped")) return;
+  card.classList.add("flipped");
+  card.setAttribute("aria-label", card.querySelector(".card-front").textContent.trim());
+
+  if(!first){ first = card; return; }
+
+  state.moves++; $("#moves").textContent = state.moves;
+  const a = first; first = null;
+
+  if(a.dataset.pair === card.dataset.pair){
+    playSelect();
+    a.classList.add("matched"); card.classList.add("matched");
+    state.pairsFound++; state.shields++;
+    $("#pairsFound").textContent = state.pairsFound;
+    renderFeathers($("#featherHud"), state.shields, SCHOOL_CONFIG.values.length);
+    $("#matchToast").textContent = CHEERS[Math.floor(Math.random()*CHEERS.length)];
+    if(state.pairsFound === SCHOOL_CONFIG.values.length){
+      // score: base per pair, small penalty per extra move beyond perfect
+      const perfect = SCHOOL_CONFIG.values.length;
+      state.memoryScore = Math.max(60, state.pairsFound*50 - Math.max(0,state.moves-perfect)*5);
+      setTimeout(showPowerScreen, 700);
+    }
+  } else {
+    lock = true;
+    a.classList.add("wrong"); card.classList.add("wrong");
+    $("#matchToast").textContent = "Not quite — flip again!";
+    setTimeout(()=>{
+      a.classList.remove("flipped","wrong");
+      card.classList.remove("flipped","wrong");
+      a.setAttribute("aria-label","Hidden card");
+      card.setAttribute("aria-label","Hidden card");
+      lock = false;
+    }, 800);
+  }
+}
+
+/* ---------- interstitial ---------- */
+function showPowerScreen(){
+  $("#powerZiggy").innerHTML = ziggyImg();
+  $("#powerText").innerHTML =
+    `You matched all <b>${state.pairsFound}</b> values in <b>${state.moves}</b> moves
+     and earned <b>${state.shields} shield feathers</b>!`;
+  const row = $("#shieldRow"); row.innerHTML = "";
+  for(let i=0;i<state.shields;i++){
+    const s = document.createElement("span"); s.className="shield-big"; row.appendChild(s);
+  }
+  show("powerScreen");
+}
+$("#flyBtn").addEventListener("click", startFlight);
+
+/* ============================================================
+   ROUND 2 — FLIGHT
+   Tap/hold or space to flap. Collect stars, dodge rainclouds.
+   Each shield feather absorbs one cloud hit.
+   ============================================================ */
+/* ============================================================
+   ZIGGY FLIGHT CHALLENGE — a harder, endless remix of the flight
+   round. Unlocks once all three bonus games are unlocked. Every
+   30s the game pauses for a question; answer right to level up
+   (faster, more clouds); level 10 ramps forever until game over.
+   ============================================================ */
+const CHALLENGE_QUESTIONS = (function(){
+  const list = [];
+  // one auto-built question per Black & Green value, from the values already in SCHOOL_CONFIG
+  SCHOOL_CONFIG.values.forEach(v=>{
+    const others = SCHOOL_CONFIG.values.filter(x=>x.word!==v.word)
+      .sort(()=>Math.random()-0.5).slice(0,2).map(x=>x.word);
+    const options = [v.word, ...others].sort(()=>Math.random()-0.5);
+    list.push({ q:`Which Black & Green value means: "${v.meaning}"?`, options, a:options.indexOf(v.word) });
+  });
+  // a spread of the game's own trivia, reused here for the challenge
+  list.push(
+    { q:"If you are late to school, what must you hand in?", options:["Your books and bag","Your mobile phone","Your equipment"], a:1 },
+    { q:"If you feel unwell or hurt yourself, where should you go?", options:["Your form room","Miss Lester's Office","The Medical Bay"], a:2 },
+    { q:"What time should you be in your form room by?", options:["8.25am","8.50am","9.00am"], a:0 },
+    { q:"Which playgrounds are Year 7s allowed to use?", options:["Only the school field","The top playground and the mixed playground","Any playground, including Sixth Form"], a:1 },
+    { q:"When are you allowed to use the toilets?", options:["Anytime, even during lessons","Before/after school, break, lunch — or with permission in lessons","Only before school"], a:1 },
+    { q:"What must you always do when you use the toilets?", options:["Wash hands, one student per cubicle, flush, leave it as found","Leave the door open","Wait for a friend"], a:0 },
+    { q:"What can everyone do to help keep the playgrounds clean?", options:["Put rubbish in the bin","Leave it for someone else","Kick it under a bench"], a:0 },
+    { q:"How do you volunteer to be your form's Keeper?", options:["You can't — it's chosen for you","Ask your form tutor to add your name to the rota","Tell the Headteacher"], a:1 },
+    { q:"Where can you buy small snacks and drinks?", options:["The Snack Pod","The Library","The Staff Room"], a:0 },
+    { q:"What can you earn by volunteering as a litter picker?", options:["Nothing, it's just a chore","A detention","Ziggy stickers and Teacher Points"], a:2 },
+  );
+  return list;
+})();
+
+const challenge = {running:false, raf:null, active:false};
+
+function startFlightChallenge(){
+  show("flightScreen");
+  $("#flightTimerStat").style.display = "none";
+  $("#flightLevelStat").style.display = "inline";
+  $("#flightGateOverlay").classList.remove("show");
+  $("#flightGameOver").classList.remove("show");
+  challenge.active = true;
+
+  const sky = $("#sky");
+  const player = $("#player");
+  player.innerHTML = `<img id="playerImg" class="ziggy-img" src="${ZIGGY_GLIDE}" alt="Ziggy flying" draggable="false">`;
+  const playerImg = $("#playerImg");
+  let lastHold = false;
+
+  sky.querySelectorAll(".star,.cloud").forEach(e=>e.remove());
+  $("#tapHint").style.display = "block";
+
+  const W = () => sky.clientWidth, H = () => sky.clientHeight;
+  const p = {x: W()*0.22, y: H()*0.4, vy:0, r:32};
+  let stars=[], clouds=[], holding=false;
+  let score=0, shields=6;
+  let level=1, segTime=0, gateOpen=false;
+  // twice per 30s level, the *next star to spawn* becomes the diamond variant
+  let diamondTriggers=[8+Math.random()*8, 18+Math.random()*8], diamondsUsed=0;
+  let nextDiamondEndless=15;   // level 10's endless phase keeps the twice-a-cycle pace
+  let spawnStar=0, spawnCloud=0, last=performance.now(), stunned=0, msgT=null;
+  let endlessRamp=0;   // only grows once level 10 is reached — the "no escape" phase
+  let pool = CHALLENGE_QUESTIONS.slice().sort(()=>Math.random()-0.5);
+  let qIndex = 0;
+
+  $("#flightScore").textContent = 0;
+  $("#flightLevelNum").textContent = level;
+  renderFeathers($("#shieldHud"), shields, 6);
+
+  function say(t){
+    const m = $("#flightMsg");
+    m.textContent = t; m.classList.add("show");
+    clearTimeout(msgT); msgT = setTimeout(()=>m.classList.remove("show"), 1200);
+  }
+  function levelRamp(){
+    // +0.7 base ramp by level 1 (matching the classic game's feel), plus the
+    // endless creep once level 10 is reached
+    return 1 + (level-1)*0.22 + endlessRamp;
+  }
+  function cloudFreqMultiplier(){
+    // "20% more clouds" per level, compounding
+    return Math.pow(1.2, level-1);
+  }
+
+  const down = e => { e.preventDefault(); if(!gateOpen) holding=true; $("#tapHint").style.display="none"; };
+  const up   = e => { holding=false; };
+  sky.addEventListener("pointerdown", down);
+  window.addEventListener("pointerup", up);
+  const keyDown = e => { if((e.code==="Space"||e.code==="ArrowUp") && !gateOpen){ e.preventDefault(); holding=true; $("#tapHint").style.display="none"; } };
+  const keyUp   = e => { if(e.code==="Space"||e.code==="ArrowUp") holding=false; };
+  window.addEventListener("keydown", keyDown);
+  window.addEventListener("keyup", keyUp);
+
+  function spawn(kind, isDiamond){
+    const el = document.createElement("div");
+    el.className = "entity " + kind;
+    let size, speed;
+    if(kind==="star"){ size=34+Math.random()*14; speed=(120+Math.random()*80); }
+    else { size=62+Math.random()*26; speed=(150+Math.random()*80); }
+    el.style.width = size+"px"; el.style.height = size+"px";
+    el.innerHTML = kind==="star" ? STAR_SVG : CLOUD_SVG;
+    if(isDiamond) el.style.filter = "hue-rotate(160deg) saturate(2.2) brightness(1.15)";
+    const obj = {el, x: W()+size, y: 30+Math.random()*(H()-140), size, speed, diamond:!!isDiamond};
+    sky.appendChild(el);
+    if(kind==="star") stars.push(obj);
+    else clouds.push(obj);
+  }
+
+  function openGate(){
+    gateOpen = true; holding = false;
+    const item = pool[qIndex % pool.length]; qIndex++;
+    const box = $("#flightGateAnswers"); box.innerHTML = "";
+    $("#flightGatePrompt").textContent = item.q;
+    const bar = $("#flightGateBarFill");
+    bar.style.transition = "none"; bar.style.width = "100%";
+    void bar.offsetWidth;
+    bar.style.transition = "width 5s linear";
+    bar.style.width = "0%";
+    let answered = false;
+    const timeout = setTimeout(()=>resolveGate(false), 5000);
+    item.options.forEach((opt,idx)=>{
+      const b = document.createElement("button");
+      b.className = "answer-btn"; b.textContent = opt;
+      b.addEventListener("click", ()=>{
+        if(answered) return; answered = true;
+        clearTimeout(timeout);
+        if(idx===item.a) playSelect();
+        b.classList.add(idx===item.a ? "correct" : "wrong");
+        setTimeout(()=>resolveGate(idx===item.a), 500);
+      });
+      box.appendChild(b);
+    });
+    $("#flightGateOverlay").classList.add("show");
+  }
+
+  function resolveGate(correct){
+    $("#flightGateOverlay").classList.remove("show");
+    gateOpen = false;
+    segTime = 0; diamondsUsed = 0;
+    diamondTriggers = [8+Math.random()*8, 18+Math.random()*8];
+    if(correct && level < 10){
+      level++;
+      $("#flightLevelNum").textContent = level;
+      say(level===10 ? "Final level! Hold on tight! 🌟" : `Level ${level}! Getting trickier…`);
+    } else if(!correct){
+      shields = Math.max(0, shields-1);
+      renderFeathers($("#shieldHud"), shields, 6);
+      say("Missed that one — lost a shield feather!");
+    }
+    last = performance.now();
+  }
+
+  function loop(now){
+    if(!challenge.running) return;
+    const dt = Math.min(0.033,(now-last)/1000); last = now;
+
+    if(!gateOpen){
+      segTime += dt;
+      if(level === 10) endlessRamp += dt * 0.012;   // the slow, inescapable creep
+      else if(segTime >= 30){ openGate(); requestAnimationFrame(loop); return; }
+    }
+
+    if(holding !== lastHold){ playerImg.src = holding ? ZIGGY_FLAP : ZIGGY_GLIDE; lastHold = holding; }
+
+    if(!gateOpen){
+      p.vy += 900*dt;
+      if(holding) p.vy -= 2100*dt;
+      p.vy = Math.max(-380, Math.min(430, p.vy));
+      p.y += p.vy*dt;
+      p.y = Math.max(p.r, Math.min(H()-p.r-10, p.y));
+      if(p.y>=H()-p.r-10 || p.y<=p.r) p.vy=0;
+      if(stunned>0) stunned -= dt;
+    }
+    player.style.transform = `translate(${p.x-47}px, ${p.y-37}px) rotate(${Math.max(-18,Math.min(22,p.vy*0.04))}deg)`;
+    player.style.opacity = stunned>0 && Math.floor(now/90)%2 ? .35 : 1;
+
+    const ramp = levelRamp();
+    if(!gateOpen){
+      spawnStar -= dt; spawnCloud -= dt;
+      if(spawnStar<=0){
+        let makeDiamond = false;
+        if(level < 10 && diamondsUsed < diamondTriggers.length && segTime >= diamondTriggers[diamondsUsed]){
+          makeDiamond = true; diamondsUsed++;
+        } else if(level === 10 && segTime >= nextDiamondEndless){
+          makeDiamond = true; nextDiamondEndless += 15;
+        }
+        spawn("star", makeDiamond);
+        spawnStar = (0.5+Math.random()*0.45)/ramp;
+      }
+      if(spawnCloud<=0){ spawn("cloud"); spawnCloud = (1.15+Math.random()*0.85)/(ramp*cloudFreqMultiplier()); }
+    }
+
+    const hit = (o, pad) => {
+      const dx = (o.x+o.size/2)-p.x, dy=(o.y+o.size/2)-p.y;
+      return Math.hypot(dx,dy) < p.r + o.size/2 - pad;
+    };
+    stars = stars.filter(o=>{
+      if(!gateOpen) o.x -= o.speed*ramp*dt;
+      o.el.style.transform = `translate(${o.x}px,${o.y}px)`;
+      if(!gateOpen && hit(o,8)){
+        const pts = o.diamond ? 50 : 10;
+        score += pts; $("#flightScore").textContent = score;
+        if(o.diamond) say("💎 5x bonus!");
+        o.el.remove(); return false;
+      }
+      if(o.x < -o.size){ o.el.remove(); return false; }
+      return true;
+    });
+    clouds = clouds.filter(o=>{
+      if(!gateOpen) o.x -= o.speed*ramp*dt;
+      o.el.style.transform = `translate(${o.x}px,${o.y}px)`;
+      if(!gateOpen && stunned<=0 && hit(o,14)){
+        if(shields>0){
+          shields--; say("Shield feather saved you! 🪶");
+          renderFeathers($("#shieldHud"), shields, 6);
+          stunned = 1.2;
+          o.el.remove(); return false;
+        } else {
+          o.el.remove();
+          endChallenge();
+          return false;
+        }
+      }
+      if(o.x < -o.size){ o.el.remove(); return false; }
+      return true;
+    });
+
+    challenge.raf = requestAnimationFrame(loop);
+  }
+
+  function endChallenge(){
+    challenge.running = false;
+    challenge.active = false;
+    cancelAnimationFrame(challenge.raf);
+    sky.removeEventListener("pointerdown", down);
+    window.removeEventListener("pointerup", up);
+    window.removeEventListener("keydown", keyDown);
+    window.removeEventListener("keyup", keyUp);
+    state.bestFlightChallenge = Math.max(state.bestFlightChallenge, score);
+    saveProgress();
+    $("#flightGameOverText").innerHTML =
+      `You reached <b>Level ${level}</b> with a score of <b>${score}</b>.<br>Your best Flight Challenge score: <b>${state.bestFlightChallenge}</b>`;
+    $("#flightGameOver").classList.add("show");
+  }
+  $("#flightGameOverBtn").onclick = ()=>{
+    playConfirm();
+    $("#flightGameOver").classList.remove("show");
+    show(state.returnScreen || "resultScreen");
+  };
+
+  challenge.running = true;
+  last = performance.now();
+  challenge.raf = requestAnimationFrame(loop);
+}
+
+const flight = {running:false, raf:null};
+
+function startFlight(){
+  show("flightScreen");
+  const sky = $("#sky");
+  const player = $("#player");
+  player.innerHTML = `<img id="playerImg" class="ziggy-img" src="${ZIGGY_GLIDE}" alt="Ziggy flying" draggable="false">`;
+  const playerImg = $("#playerImg");
+  let lastHold = false;
+
+  // clear old entities
+  sky.querySelectorAll(".star,.cloud").forEach(e=>e.remove());
+  $("#tapHint").style.display = "block";
+
+  const W = () => sky.clientWidth, H = () => sky.clientHeight;
+  const p = {x: W()*0.22, y: H()*0.4, vy:0, r:32};
+  let stars=[], clouds=[], holding=false;
+  let score=0, shields=state.shields, timeLeft=SCHOOL_CONFIG.flightSeconds;
+  let spawnStar=0, spawnCloud=0, last=performance.now(), stunned=0, msgT=null;
+  let elapsed=0, ramp=1;   // difficulty ramps up as the round goes on
+
+  $("#flightScore").textContent = 0;
+  $("#flightTime").textContent = timeLeft;
+  renderFeathers($("#shieldHud"), shields, Math.max(shields, SCHOOL_CONFIG.values.length));
+
+  function say(t){
+    const m = $("#flightMsg");
+    m.textContent = t; m.classList.add("show");
+    clearTimeout(msgT); msgT = setTimeout(()=>m.classList.remove("show"), 1200);
+  }
+
+  // input
+  const down = e => { e.preventDefault(); holding=true; $("#tapHint").style.display="none"; };
+  const up   = e => { holding=false; };
+  sky.addEventListener("pointerdown", down);
+  window.addEventListener("pointerup", up);
+  const keyDown = e => { if(e.code==="Space"||e.code==="ArrowUp"){ e.preventDefault(); holding=true; $("#tapHint").style.display="none"; } };
+  const keyUp   = e => { if(e.code==="Space"||e.code==="ArrowUp") holding=false; };
+  window.addEventListener("keydown", keyDown);
+  window.addEventListener("keyup", keyUp);
+
+  // countdown
+  const timer = setInterval(()=>{
+    timeLeft--;
+    $("#flightTime").textContent = timeLeft;
+    if(timeLeft<=0) endFlight();
+  }, 1000);
+
+  function spawn(kind){
+    const el = document.createElement("div");
+    el.className = "entity " + kind;
+    const size = kind==="star" ? 34+Math.random()*14 : 62+Math.random()*26;
+    el.style.width = size+"px"; el.style.height = size+"px";
+    el.innerHTML = kind==="star" ? STAR_SVG : CLOUD_SVG;
+    const obj = {el, x: W()+size, y: 30+Math.random()*(H()-140), size,
+                 speed: (kind==="star"?120:150) + Math.random()*80};
+    sky.appendChild(el);
+    (kind==="star"?stars:clouds).push(obj);
+  }
+
+  function loop(now){
+    if(!flight.running) return;
+    const dt = Math.min(0.033,(now-last)/1000); last = now;
+    elapsed += dt;
+    ramp = 1 + 0.7 * Math.min(1, elapsed / SCHOOL_CONFIG.flightSeconds);
+
+    // wing pose follows the flap input
+    if(holding !== lastHold){
+      playerImg.src = holding ? ZIGGY_FLAP : ZIGGY_GLIDE;
+      lastHold = holding;
+    }
+
+    // physics — gentle for 11-year-olds
+    p.vy += 900*dt;                 // gravity
+    if(holding) p.vy -= 2100*dt;    // flap thrust
+    p.vy = Math.max(-380, Math.min(430, p.vy));
+    p.y += p.vy*dt;
+    p.y = Math.max(p.r, Math.min(H()-p.r-10, p.y));
+    if(p.y>=H()-p.r-10 || p.y<=p.r) p.vy=0;
+
+    if(stunned>0) stunned -= dt;
+    player.style.transform =
+      `translate(${p.x-47}px, ${p.y-37}px) rotate(${Math.max(-18,Math.min(22,p.vy*0.04))}deg)`;
+    player.style.opacity = stunned>0 && Math.floor(now/90)%2 ? .35 : 1;
+
+    // spawning
+    spawnStar -= dt; spawnCloud -= dt;
+    if(spawnStar<=0){ spawn("star"); spawnStar = (0.5+Math.random()*0.45)/ramp; }
+    if(spawnCloud<=0){ spawn("cloud"); spawnCloud = (1.15+Math.random()*0.85)/ramp; }
+
+    // move + collide
+    const hit = (o, pad) => {
+      const dx = (o.x+o.size/2)-p.x, dy=(o.y+o.size/2)-p.y;
+      return Math.hypot(dx,dy) < p.r + o.size/2 - pad;
+    };
+    stars = stars.filter(o=>{
+      o.x -= o.speed*ramp*dt;
+      o.el.style.transform = `translate(${o.x}px,${o.y}px)`;
+      if(hit(o,8)){
+        score += 10; $("#flightScore").textContent = score;
+        o.el.remove(); return false;
+      }
+      if(o.x < -o.size){ o.el.remove(); return false; }
+      return true;
+    });
+    clouds = clouds.filter(o=>{
+      o.x -= o.speed*ramp*dt;
+      o.el.style.transform = `translate(${o.x}px,${o.y}px)`;
+      if(stunned<=0 && hit(o,14)){
+        if(shields>0){
+          shields--; say("Shield feather saved you! 🪶");
+          renderFeathers($("#shieldHud"), shields, Math.max(state.shields, SCHOOL_CONFIG.values.length));
+        } else {
+          score = Math.max(0, score-15); $("#flightScore").textContent = score;
+          say("Ouch, a raincloud! −15");
+        }
+        stunned = 1.2;
+        o.el.remove(); return false;
+      }
+      if(o.x < -o.size){ o.el.remove(); return false; }
+      return true;
+    });
+
+    flight.raf = requestAnimationFrame(loop);
+  }
+
+  function endFlight(){
+    flight.running = false;
+    clearInterval(timer);
+    cancelAnimationFrame(flight.raf);
+    sky.removeEventListener("pointerdown", down);
+    window.removeEventListener("pointerup", up);
+    window.removeEventListener("keydown", keyDown);
+    window.removeEventListener("keyup", keyUp);
+    state.flightScore = score;
+    showResults();
+  }
+
+  flight.running = true;
+  last = performance.now();
+  flight.raf = requestAnimationFrame(loop);
+}
+
+/* ============================================================
+   RESULTS — reinforce the values one more time
+   ============================================================ */
+
+/* ============================================================
+   ZIGGY'S FIRST DAY ADVENTURE
+   The map is the uploaded aerial artwork. Coordinates are % of
+   the map (x across, y down) so everything scales on any screen.
+   Add more stops to ADVENTURE.stops — each stop = a walk + trivia.
+   ============================================================ */
+const ADVENTURE = {
+  start: {x:12, y:91},              // school entrance path, bottom-left
+  stops: [
+    {
+      id:"bikes", name:"The Bike Shelter",
+      path:[{x:19, y:83},{x:24.5, y:71}],   // waypoints Ziggy walks through
+      intro:"Ziggy has reached the bike shelter — where students who cycle park up before heading in.",
+      questions:[
+        { q:"What time should you be in your form room by every morning?",
+          options:["8.25am","8.50am","9.00am"], a:0,
+          tip:"Registration runs 8.30–8.50, but Ravens Wood students are in their form room by 8.25am." },
+        { q:"You arrive at 8.40am — a little late! What should you do?",
+          options:["Sign in at the gate, then go to your form room","Go straight to Period 1","Wait outside until break"], a:0,
+          tip:"Between 8.30 and 8.50, sign in at the gate and head to your form room. After 8.50, sign in at Student Reception." },
+        { q:"Your bus was delayed this morning. Who should you tell?",
+          options:["Your Form Tutor","Nobody — keep it quiet","The school chef"], a:0,
+          tip:"Your Form Tutor is your first port of call for almost everything — including late buses." },
+      ],
+    },
+    {
+      id:"reception", name:"Student Reception & Med Bay",
+      path:[{x:32, y:77},{x:39.5, y:72.5}],   // along the walkway, stopping on the path at the porch steps
+      intro:"This is Student Reception and the Med Bay — one of the most useful places to know on your first day.",
+      questions:[
+        { q:"If you are late to school, what must you hand in to school?",
+          options:["Your books and bag","Your mobile phone","Your equipment"], a:1,
+          tip:"Phones are handed in at the start of every day — if you arrive late, hand yours in when you sign in." },
+        { q:"If you ever feel unwell or have hurt yourself in an accident, where should you go?",
+          options:["Your form room","Miss Lester's Office","The Medical Bay"], a:2,
+          tip:"The Medical Bay is right here by Student Reception — in an emergency, come straight over." },
+        { q:"What else is located in this section of the school?",
+          options:["The music department","The Site Managers","Wellbeing and the Safeguarding Team"], a:2,
+          tip:"The Wellbeing Hub and the Safeguarding Team are based here — you can always come and find help." },
+      ],
+    },
+    {
+      id:"yr7playground", name:"The Year 7 Playground",
+      path:[{x:28, y:70},{x:14, y:52},{x:8, y:35}],   // across the site and up to the top playground by the trees
+      intro:"Welcome to the Year 7 Playground — the highest one, up by the trees. This is your space at break and lunch!",
+      questions:[
+        { q:"You've finished your snack at break. What do you do with the wrapper?",
+          options:["Leave it — someone else will get it","Put it in a bin","Tuck it behind a bench"], a:1,
+          tip:"We take Pride in our school — keeping our playgrounds clean and tidy is part of being Black & Green." },
+        { q:"Something happens in the playground at break — someone is hurt or there's trouble. Who should you find?",
+          options:["The duty member of staff","Nobody — sort it out yourself","Wait until the end of lunch"], a:0,
+          tip:"At break and lunchtime there is always a duty member of staff around — they are there to help you." },
+        { q:"Which playgrounds are Year 7s allowed to use?",
+          options:["Only the school field","The top playground and the mixed playground","Any playground, including the Sixth Form area"], a:1,
+          tip:"Year 7s can use the top playground and the mixed playground — plenty of room to find your friends." },
+      ],
+    },
+    {
+      id:"formtime", name:"Form Time!",
+      scene:{
+        aspect:"1661 / 947",
+        ziggyStart:{x:14, y:62},          // the playground by the diagonal-lined rectangle, left side
+      },
+      question:"The bell has rung to indicate it is Form Time — where should you go?",
+      hotspots:[
+        { x:58.5, y:44.5, correct:false,
+           msg:"This will be closed — it is time for lessons." },                       // Snack Pod kiosk
+        { x:36,   y:49,   correct:true,
+           msg:"This is the Maths entrance, where your form rooms are based.",
+           path:[{x:22, y:57},{x:29, y:53},{x:36, y:49}] },                        // down the stairs, take a left
+        { x:88,   y:37,   correct:false,
+           msg:"Too late for the canteen — it is Form Time!" },                          // white building, far right
+      ],
+    },
+    {
+      id:"knowplaces", name:"Know Your Places",
+      series:{
+        spots:[
+          { id:"maths",    x:27.6, y:34.3, name:"the Maths department" },
+          { id:"english",  x:55.9, y:37.6, name:"the English exit, where the KS3 toilets are" },
+          { id:"snackpod", x:58.7, y:47.8, name:"the Snack Pod" },
+          { id:"pe",       x:69.0, y:13.5, name:"the PE office" },
+          { id:"hall",     x:75.7, y:28.8, name:"the Main Hall — the canteen" },
+        ],
+        questions:[
+          { q:"Where is your Head of Year's office?", spot:"maths",
+            answer:"Mr Ralph's office is upstairs in the Maths department." },
+          { q:"Where are the KS3 toilets?", spot:"english",
+            answer:"Your toilets are downstairs at the exit from English." },
+          { q:"Where can I buy snacks at break and lunch?", spot:"snackpod",
+            answer:"The Snack Pod sells small snacks and drinks — queue up where staff instruct." },
+          { q:"If I have PE or a fixture, where do I go?", spot:"pe",
+            answer:"Wait outside the PE office by the railings." },
+          { q:"Where is the canteen for lunch?", spot:"hall",
+            answer:"The Main Hall — queue up where staff instruct, and remember everyone needs a tray!" },
+        ],
+      },
+    },
+    // Next stops go here...
+  ],
+};
+const MAP2_SRC = "assets/img-680bf8e425.webp";
+
+const adv = { stopIndex:0, qIndex:0, moving:false, started:false, flapTimer:null };
+
+function startAdventure(){
+  adv.stopIndex = 0; adv.qIndex = 0; adv.moving = false; adv.started = false;
+  const z = $("#advZiggy");
+  z.classList.remove("walking","arrived");
+  z.style.transitionDuration = "0s";
+  z.style.left = ADVENTURE.start.x + "%";
+  z.style.top  = ADVENTURE.start.y + "%";
+  if(!z.querySelector(".ziggy-img")){
+    z.insertAdjacentHTML("beforeend", ziggyImg());
+  }
+  clearInterval(adv.flapTimer);
+  z.querySelector(".ziggy-img").src = ZIGGY_ANIM;   // idle animation while waiting
+  z.style.opacity = 1; z.style.transition = "";
+  const mb = $("#mapB");
+  mb.style.transition = "none"; mb.style.opacity = 0;
+  void mb.offsetWidth; mb.style.transition = "";
+  $("#mapA").src = MAP1_SRC;
+  $("#mapWrap").style.aspectRatio = "3 / 2";
+  $("#mapWrap").classList.remove("exploring");
+  adv.explore = false; adv.viewIndex = 0;
+  document.querySelectorAll(".hotspot").forEach(h=>h.remove());
+  $("#clickMe").style.display = "";
+  $("#advPrompt").textContent = "It's Ziggy's very first day at Ravens Wood! He's just come through the school entrance. Give him a click to get going.";
+  $("#advContent").innerHTML = "";
+  show("adventureScreen");
+}
+
+$("#advZiggy").addEventListener("click", ()=>{
+  if(adv.moving || adv.started) return;
+  adv.started = true;
+  $("#clickMe").style.display = "none";
+  const stop = ADVENTURE.stops[adv.stopIndex];
+  if(stop.scene) sceneStop(stop);
+  else if(stop.series) seriesStop(stop);
+  else walkTo(stop);
+});
+
+/* Walk Ziggy through waypoints, wings flapping, then call onDone(). */
+function walkPath(path, onDone){
+  adv.moving = true;
+  const z = $("#advZiggy");
+  z.classList.remove("arrived");
+  z.classList.add("walking");
+  const img = z.querySelector(".ziggy-img");
+  let flapUp = true;
+  img.src = ZIGGY_FLAP;
+  clearInterval(adv.flapTimer);
+  adv.flapTimer = setInterval(()=>{
+    flapUp = !flapUp;
+    img.src = flapUp ? ZIGGY_FLAP : ZIGGY_GLIDE;
+  }, 240);
+  let cur = {x: parseFloat(z.style.left), y: parseFloat(z.style.top)};
+  let i = 0;
+  (function leg(){
+    if(i >= path.length){
+      z.classList.remove("walking");
+      z.classList.add("arrived");
+      clearInterval(adv.flapTimer);
+      img.src = ZIGGY_ANIM;   // settle back to idle
+      adv.moving = false;
+      onDone();
+      return;
+    }
+    const p = path[i++];
+    const dist = Math.hypot(p.x-cur.x, p.y-cur.y);
+    const dur = Math.max(0.7, dist*0.13);        // steady pace
+    z.style.transitionDuration = dur + "s";
+    void z.offsetWidth;   // reflow so the new duration applies
+    z.style.left = p.x + "%";
+    z.style.top  = p.y + "%";
+    cur = p;
+    setTimeout(leg, dur*1000 + 60);
+  })();
+}
+
+function walkTo(stop){
+  $("#advPrompt").textContent = "Off he goes…";
+  walkPath(stop.path, ()=>openTrivia(stop));
+}
+
+/* ---- series stop: several pulsing spots, answered one question at a time ---- */
+function seriesStop(stop){
+  const wrap = $("#mapWrap");
+  adv.qIndex = 0;
+  // shuffle the question order fresh each time — the spot each answers stays correct
+  adv.seriesQuestions = stop.series.questions
+    .map(q => [Math.random(), q])
+    .sort((a,b) => a[0]-b[0])
+    .map(pair => pair[1]);
+  stop.series.spots.forEach(sp=>{
+    const h = document.createElement("button");
+    h.className = "hotspot";
+    h.style.left = sp.x + "%";
+    h.style.top  = sp.y + "%";
+    h.dataset.spot = sp.id;
+    h.setAttribute("aria-label", "Place on the map");
+    h.addEventListener("click", ()=>seriesPick(stop, sp, h));
+    wrap.appendChild(h);
+  });
+  askSeriesQuestion(stop);
+}
+
+function askSeriesQuestion(stop){
+  if(adv.qIndex >= stop.series.questions.length) return;   // safety: never run past the end
+  adv.seriesLock = false;
+  const item = stop.series.questions[adv.qIndex];
+  $("#advPrompt").textContent = item.q;
+  $("#advContent").innerHTML =
+    `<p style="font-weight:800; margin:.2em 0">Question ${adv.qIndex+1} of ${stop.series.questions.length} — tap the right gold circle on the map!</p>
+     <p class="adv-tip" aria-live="polite"></p>`;
+}
+
+function seriesPick(stop, sp, h){
+  if(adv.seriesLock || h.classList.contains("done")) return;
+  const item = stop.series.questions[adv.qIndex];
+  if(!item) return;
+  const tip = $("#advContent").querySelector(".adv-tip");
+  if(sp.id === item.spot){
+    playSelect();
+    adv.seriesLock = true;   // pause input until the next question appears
+    h.classList.add("done");
+    h.textContent = "✓";
+    tip.textContent = "✔ " + item.answer;
+    adv.qIndex++;
+    if(adv.qIndex < stop.series.questions.length){
+      setTimeout(()=>askSeriesQuestion(stop), 2400);
+    } else {
+      setTimeout(()=>{
+        document.querySelectorAll(".hotspot").forEach(x=>x.remove());
+        finishStop(stop);
+      }, 2400);
+    }
+  } else {
+    h.classList.remove("no"); void h.offsetWidth; h.classList.add("no");
+    tip.textContent = "✘ That's " + sp.name + " — try again!";
+  }
+}
+
+/* ---- scene stop: crossfade to a new view, then hotspot question ---- */
+function sceneStop(stop){
+  adv.moving = true;
+  const z = $("#advZiggy");
+  const b = $("#mapB");
+  $("#advPrompt").textContent = "Ding ding! The bell is ringing…";
+  $("#advContent").innerHTML = "";
+  // fade Ziggy out, crossfade the map, drop him at his new spot
+  z.style.transition = "opacity .45s";
+  z.style.opacity = 0;
+  b.src = MAP2_SRC;
+  $("#mapWrap").style.aspectRatio = stop.scene.aspect;
+  requestAnimationFrame(()=>{ b.style.opacity = 1; });
+  setTimeout(()=>{
+    z.style.transition = "left 0s, top 0s, opacity .45s";
+    z.style.left = stop.scene.ziggyStart.x + "%";
+    z.style.top  = stop.scene.ziggyStart.y + "%";
+    void z.offsetWidth;
+    z.style.opacity = 1;
+  }, 750);
+  setTimeout(()=>{
+    z.style.transition = "";       // hand control back to the stylesheet
+    adv.moving = false;
+    showHotspots(stop);
+  }, 1500);
+}
+
+function showHotspots(stop){
+  $("#advPrompt").textContent = stop.question;
+  $("#advContent").innerHTML =
+    `<p style="font-weight:800; margin:.2em 0">Tap one of the glowing gold circles on the map!</p>
+     <p class="adv-tip" aria-live="polite"></p>`;
+  const tip = $("#advContent").querySelector(".adv-tip");
+  const wrap = $("#mapWrap");
+  stop.hotspots.forEach(hs=>{
+    const h = document.createElement("button");
+    h.className = "hotspot";
+    h.style.left = hs.x + "%";
+    h.style.top  = hs.y + "%";
+    h.setAttribute("aria-label","Choice on the map");
+    h.addEventListener("click", ()=>{
+      if(adv.moving) return;
+      if(hs.correct){
+        playSelect();
+        tip.textContent = "✔ " + hs.msg;
+        wrap.querySelectorAll(".hotspot").forEach(x=>x.remove());
+        $("#advPrompt").textContent = "That's the one! Off to Form Time…";
+        walkPath(hs.path, ()=>finishStop(stop));
+      } else {
+        h.classList.remove("no"); void h.offsetWidth; h.classList.add("no");
+        tip.textContent = "✘ " + hs.msg + " Try another circle!";
+      }
+    });
+    wrap.appendChild(h);
+  });
+}
+
+function openTrivia(stop){
+  adv.qIndex = 0;
+  $("#advPrompt").textContent = stop.intro;
+  askQuestion(stop);
+}
+
+function askQuestion(stop){
+  const item = stop.questions[adv.qIndex];
+  const c = $("#advContent");
+  c.innerHTML = `
+    <h3>${stop.name} &middot; Question ${adv.qIndex+1} of ${stop.questions.length}</h3>
+    <p style="font-weight:800; margin:.2em 0">${item.q}</p>
+    <div class="answers"></div>
+    <p class="adv-tip" aria-live="polite"></p>`;
+  const box = c.querySelector(".answers");
+  item.options.forEach((opt, idx)=>{
+    const b = document.createElement("button");
+    b.className = "answer-btn";
+    b.textContent = opt;
+    b.addEventListener("click", ()=>{
+      if(idx === item.a){
+        playSelect();
+        box.querySelectorAll("button").forEach(x=>x.disabled = true);
+        b.classList.add("correct");
+        c.querySelector(".adv-tip").textContent = "✔ " + item.tip;
+        setTimeout(()=>{
+          adv.qIndex++;
+          if(adv.qIndex < stop.questions.length) askQuestion(stop);
+          else finishStop(stop);
+        }, 2200);
+      } else {
+        b.classList.remove("wrong"); void b.offsetWidth;
+        b.classList.add("wrong");
+        c.querySelector(".adv-tip").textContent = "Not quite — have another go!";
+      }
+    });
+    box.appendChild(b);
+  });
+}
+
+function finishStop(stop){
+  adv.stopIndex++;
+  const z = $("#advZiggy");
+  if(adv.stopIndex < ADVENTURE.stops.length){
+    // more stops ahead — light Ziggy up again and wait for a click
+    const next = ADVENTURE.stops[adv.stopIndex];
+    adv.started = false;
+    z.classList.remove("arrived");
+    $("#clickMe").style.display = "";
+    $("#advPrompt").textContent = `Stop complete! 🌟 Next up: ${next.name}. Give Ziggy another click to head over.`;
+    $("#advContent").innerHTML = "";
+  } else {
+    z.classList.add("arrived");
+    if(!state.adventureDone){
+      state.adventureDone = true;
+      recomputeBestScore();
+    }
+    enterExplore(1);   // free exploration begins from the current (rotated) view
+  }
+}
+
+
+/* ============================================================
+   FREE EXPLORATION — after the story, students fly around the
+   school through four rotated views (use the round arrow
+   buttons to turn) and tap gold info circles.
+   EDIT the titles/text below — they are PLACEHOLDER facts
+   for staff to correct!
+   ============================================================ */
+const MAP3_SRC = "assets/img-2668c8bd2d.webp";
+const MAP4_SRC = "assets/img-80796e1366.webp";
+const MAP1_SRC = document.getElementById("mapA").src;   // the original aerial view
+
+const EXPLORE = {
+  views:[
+    { src:MAP1_SRC, aspect:"3072 / 2048", ziggy:{x:12, y:88},
+      spots:[
+        {x:11,   y:52,   title:"Playgrounds",             text:"Remember, year groups have their own area — do you remember yours?"},
+        {x:19.3, y:53.6, title:"Pathway",                 text:"This leads to the Snack Pod, English, Maths and your playground."},
+        {x:23.7, y:60.7, title:"Humanities Entrance",     text:"These doors lead to a long corridor housing Geography, History, PRE and Citizenship — with Science upstairs."},
+        {x:25.3, y:73.5, title:"Bike Sheds",              text:"Students are free to use these, but you need to provide your own lock."},
+        {x:27.8, y:66.6, title:"Student Crossing",        text:"Cross safely here — keep an eye out for vehicles and deliveries."},
+        {x:45.8, y:52.5, title:"Staff Car Park",          text:"This area is out of bounds to all students at all times."},
+        {x:55.6, y:43.4, title:"Student Crossing",        text:"Use this to get back into the main building and the Science stairs."},
+        {x:61.2, y:63.6, title:"Alternate Hall Entrance", text:"Students use this entrance only for assembly and specific circumstances — the field is out of bounds."},
+        {x:77.6, y:47.2, title:"PE Office",               text:"Students wait here for fixtures or for PE lessons."},
+        {x:86.4, y:36.2, title:"Back of PE",              text:"Students can only use this area to access MFL, Music and Drama."},
+        {x:86.4, y:63.8, title:"The 3G",                  text:"Students use this for lessons and fixtures."},
+        {x:94.2, y:47.2, title:"Path to the 3G",          text:"This is the only way students can access the 3G."},
+      ]},
+    { src:MAP2_SRC, aspect:"1661 / 947", ziggy:{x:14, y:62},
+      spots:[
+        {x:14.9, y:79.5, title:"Year 7 Playground",  text:"This is your playground — stay off the grass hill. There is space for basketball, football and cricket, and benches at the end."},
+        {x:18.6, y:49.9, title:"Bike Shed Path",     text:"This area is out of bounds unless you are moving between classes — do not go down here during breaks."},
+        {x:21.7, y:26.2, title:"Computer Science",   text:"The top floor of this building hosts our Computer Science department and club."},
+        {x:25.3, y:29.8, title:"Maths",              text:"Both floors of this building are the Maths department."},
+        {x:25.8, y:43.6, title:"Art",                text:"The top floor hosts our Art department."},
+        {x:32.3, y:41.0, title:"Maths Entrance",     text:"This is the main entrance to your Form area."},
+        {x:36.4, y:37.7, title:"Library",            text:"Go through the Maths entrance and to the right is the Library, where you can work and take out books."},
+        {x:39.9, y:57.8, title:"Mixed Playground",   text:"Any student can use this — there are benches to sit, and the Snack Pod."},
+        {x:49.3, y:44.5, title:"English",            text:"Both floors of this building are the English department."},
+        {x:55.7, y:40.4, title:"KS3 Toilets & Quiet Garden", text:"Downstairs at the English exit — your toilets during break and lunch. If you have a pass, the Quiet Garden entrance is here too."},
+        {x:58.4, y:45.2, title:"Snack Pod",          text:"Where you can order small snacks and drinks."},
+        {x:64.3, y:43.5, title:"Alternate Hums & Science Entrance", text:"This door gives you access to both department areas."},
+      ]},
+    { src:MAP3_SRC, aspect:"1788 / 880", ziggy:{x:6, y:70},
+      spots:[
+        {x:16.0, y:46.5, title:"Sports/Exam Hall",  text:"There is an entrance on this side you will only use if you are having an exam — be mindful and quiet if exams are running."},
+        {x:17.0, y:64.5, title:"Music",             text:"This is our Music department, which hosts regular clubs."},
+        {x:25.0, y:53.5, title:"Drama 2 & Music Lessons", text:"This entrance gives you access to D2, and where all our music lessons are hosted."},
+        {x:32.0, y:71.5, title:"MFL Block",         text:"Downstairs is our German and French departments."},
+        {x:37.5, y:43.0, title:"Gym",               text:"Only accessible with staff instructions — do not enter alone without permission."},
+        {x:42.0, y:81.5, title:"Business & Media",  text:"Upstairs hosts Business, Economics, Media & Film."},
+        {x:50.5, y:58.5, title:"Staff Room, PD & Inclusion", text:"Downstairs is our Staff Room and HU13; upstairs is our PD suite and Inclusion Provision."},
+        {x:60.0, y:64.5, title:"DT Entrance",       text:"One of our entrances for the DT workshops."},
+        {x:65.2, y:51.3, title:"DT Entrance",       text:"The entrance for our main DT rooms."},
+        {x:66.3, y:39.2, title:"Quiet Garden",      text:"Students can ask for a pass — only those with one can use the Quiet Garden."},
+        {x:70.2, y:84.0, title:"Cabins",            text:"These are our cabins — you may have lessons in these."},
+        {x:74.7, y:71.2, title:"DT Entrance",       text:"Our final entrance for DT."},
+        {x:83.6, y:45.0, title:"Bike Sheds",        text:"Only use this area in lesson transition — out of bounds at break and lunch."},
+        {x:90.8, y:69.5, title:"Drift Gate",        text:"Students can enter school through this road — be mindful of our neighbours. It shuts at 8:15am."},
+      ]},
+    { src:MAP4_SRC, aspect:"1423 / 1105", ziggy:{x:6, y:93},
+      spots:[
+        {x:2.2,  y:56.0, title:"Sports Field",       text:"This is out of bounds unless you have a lesson or fixture."},
+        {x:6.3,  y:43.3, title:"Exit Path",          text:"This path leads you to the exit — you can leave assembly or a match this way."},
+        {x:18.2, y:82.3, title:"The 3G",             text:"Reminder — sometimes games are played the other way round for smaller matches."},
+        {x:20.8, y:52.0, title:"Refectory Entrance", text:"These stairs are only for staff and Sixth Form."},
+        {x:30.3, y:56.0, title:"Exit of PE Area",    text:"There is a path here that leads you back to the main building or the canteen."},
+        {x:41.4, y:42.7, title:"Main Building",      text:"The stairs here take you to the main building using the crossing."},
+        {x:43.6, y:48.8, title:"Learning Commons",   text:"This is where Sixth Formers have their space to learn — and where detentions are held (you won't get these, will you?)."},
+        {x:47.3, y:83.0, title:"PE Path",            text:"Only use this area for lessons or fixtures."},
+        {x:68.5, y:56.2, title:"Binstore & Car Park", text:"Please be mindful of vehicles coming and going in this area."},
+        {x:81.5, y:70.0, title:"Storage",            text:"Out of bounds for all students."},
+      ]},
+  ],
+};
+
+adv.explore = false;
+adv.viewIndex = 0;
+
+function setView(i, instant){
+  const v = EXPLORE.views[i];
+  adv.viewIndex = i;
+  const a = $("#mapA"), b = $("#mapB"), z = $("#advZiggy");
+  document.querySelectorAll(".hotspot").forEach(h=>h.remove());
+  const place = ()=>{
+    z.style.transition = "left 0s, top 0s, opacity .45s";
+    z.style.left = v.ziggy.x + "%";
+    z.style.top  = v.ziggy.y + "%";
+    void z.offsetWidth;
+    z.style.opacity = 1;
+    spawnInfoSpots(v);
+    adv.moving = false;
+  };
+  if(instant){
+    a.src = v.src;
+    b.style.transition = "none"; b.style.opacity = 0;
+    void b.offsetWidth; b.style.transition = "";
+    $("#mapWrap").style.aspectRatio = v.aspect;
+    place();
+  } else {
+    adv.moving = true;
+    z.style.transition = "opacity .4s"; z.style.opacity = 0;
+    b.src = v.src;
+    $("#mapWrap").style.aspectRatio = v.aspect;
+    requestAnimationFrame(()=>{ b.style.opacity = 1; });
+    setTimeout(()=>{
+      a.src = v.src;
+      b.style.transition = "none"; b.style.opacity = 0;
+      void b.offsetWidth; b.style.transition = "";
+      place();
+    }, 1250);
+  }
+}
+
+function spawnInfoSpots(v){
+  const wrap = $("#mapWrap");
+  v.spots.forEach(sp=>{
+    const h = document.createElement("button");
+    h.className = "hotspot";
+    h.style.left = sp.x + "%";
+    h.style.top  = sp.y + "%";
+    h.setAttribute("aria-label", sp.title);
+    h.addEventListener("click", ()=>{
+      h.classList.add("seen");
+      h.textContent = "i";
+      const tip = $("#advContent").querySelector(".adv-tip");
+      if(tip) tip.textContent = sp.title + " — " + sp.text;
+    });
+    wrap.appendChild(h);
+  });
+}
+
+function enterExplore(viewIndex){
+  adv.explore = true;
+  adv.started = true;
+  $("#clickMe").style.display = "none";
+  $("#advZiggy").classList.add("arrived");
+  $("#mapWrap").classList.add("exploring");
+  $("#advPrompt").textContent = "You know your way around — now explore! Use the arrows to fly around the school, and tap the gold circles to learn about each place.";
+  $("#advContent").innerHTML =
+    '<p class="adv-tip" aria-live="polite" style="min-height:1.4em"></p>' +
+    '<button class="btn secondary" data-back-late style="margin-top:4px">Finish exploring</button>';
+  $("#advContent").querySelector("[data-back-late]")
+    .addEventListener("click", ()=>show(state.returnScreen || "resultScreen"));
+  setView(viewIndex, true);
+}
+
+$("#rotR").addEventListener("click", ()=>{ if(!adv.moving) setView((adv.viewIndex+1)%EXPLORE.views.length, false); });
+$("#rotL").addEventListener("click", ()=>{ if(!adv.moving) setView((adv.viewIndex+3)%EXPLORE.views.length, false); });
+
+
+/* ============================================================
+   ZIGGY'S TIMETABLE CHALLENGE
+   Part 1: the night-before bedroom routine (tap each chore).
+   Part 2: pack the bag against the clock for a random school
+   day, reading the Week A / Week B timetable card.
+   Chore pulse positions are % of the bedroom image — EDIT ME.
+   ============================================================ */
+const TT = {
+  chores: [
+    {id:"crisps",  x:37, y:80, title:"Crisp packet",  text:"Rubbish goes in the bin — not on the floor!"},
+    {id:"can",     x:76, y:48, title:"Drink can",     text:"Empty cans go in the bin — or better, the recycling."},
+    {id:"uniform", x:70, y:20, title:"Uniform",       text:"Check your uniform is ready and laid out for the morning."},
+    {id:"laptop",  x:87, y:59, title:"Laptop",        text:"Check Satchel One for homework — then switch it off. No late-night screens!"},
+    {id:"laundry", x:9,  y:90, title:"Laundry basket", text:"Old clothes go in the wash, ready for the week."},
+  ],
+  bag: {x:85, y:82},
+  timetable: {
+    A: { Monday:["English","Maths","Geography","PE","Computer Studies"],
+         Tuesday:["Biology","Religious Education","History","Maths","DT"],
+         Wednesday:["Chemistry","English","PE","German","French"],
+         Thursday:["Maths","Physics","Music","Drama","Art"],
+         Friday:["English","Geography","Maths","Biology","Citizenship"] },
+    B: { Monday:["Maths","PE","German","DT","English"],
+         Tuesday:["Biology","Physics","French","PRE","History"],
+         Wednesday:["English","Drama","Music","Maths","Computer Studies"],
+         Thursday:["Art","Citizenship","PE","Geography","Chemistry"],
+         Friday:["Biology","DT","English","Maths","History"] },
+  },
+  packSeconds: 60,
+};
+const TT_NIGHTS = {Monday:"Sunday", Tuesday:"Monday", Wednesday:"Tuesday", Thursday:"Wednesday", Friday:"Thursday"};
+const BOOK_COLOURS = ["#20351c","#1b2a20","#2c4533","#54565a","#7a4a21","#3a2f55","#71391f","#2f4a5a","#5a2f42","#44502a"];
+
+const tt = {done:new Set(), week:"A", day:"Monday", needed:[], packed:0, timer:null, timeLeft:0, lock:false, running:false};
+
+function startTimetableGame(){
+  tt.done.clear();
+  const wrap = $("#ttRoomWrap");
+  wrap.querySelectorAll(".hotspot").forEach(h=>h.remove());
+  $("#ttTip").textContent = "";
+  $("#ttPrompt").innerHTML =
+    "It's the night before school! Help Ziggy get ready for bed the <b>Black &amp; Green</b> way — tap each glowing circle to sort it out.";
+  TT.chores.forEach(ch=>{
+    const h = document.createElement("button");
+    h.className = "hotspot";
+    h.style.left = ch.x+"%"; h.style.top = ch.y+"%";
+    h.setAttribute("aria-label", ch.title);
+    h.addEventListener("click", ()=>{
+      if(h.classList.contains("done")) return;
+      h.classList.add("done"); h.textContent = "✓";
+      $("#ttTip").textContent = ch.title + " — " + ch.text;
+      tt.done.add(ch.id);
+      if(tt.done.size === TT.chores.length) ttShowBag();
+    });
+    wrap.appendChild(h);
+  });
+  show("ttBedroomScreen");
+}
+
+function ttShowBag(){
+  $("#ttPrompt").innerHTML = "All done — great routine! &#127890; Now <b>tap Ziggy's bag</b> to pack it for tomorrow.";
+  const wrap = $("#ttRoomWrap");
+  const b = document.createElement("button");
+  b.className = "hotspot big";
+  b.style.left = TT.bag.x+"%"; b.style.top = TT.bag.y+"%";
+  b.setAttribute("aria-label","Ziggy's school bag — tap to pack it");
+  b.addEventListener("click", startPack);
+  wrap.appendChild(b);
+}
+
+function startPack(){
+  tt.week = Math.random() < 0.5 ? "A" : "B";
+  const days = Object.keys(TT.timetable[tt.week]);
+  tt.day = days[Math.floor(Math.random()*days.length)];
+  tt.needed = TT.timetable[tt.week][tt.day].slice();
+  tt.packed = 0; tt.lock = false; tt.running = true;
+  tt.timeLeft = TT.packSeconds;
+  $("#ttCelebrate").classList.remove("show");
+  $("#ttDay").innerHTML = `It's <u>${TT_NIGHTS[tt.day]} night</u> — pack for <u>${tt.day}, Week ${tt.week}</u>!`;
+  $("#ttTimer").textContent = tt.timeLeft;
+  $("#ttTimer").classList.remove("low");
+  $("#ttFeedback").textContent = "Tap the right books for the day — check the card!";
+  $("#ttBagCount").textContent = "0 / 5 packed";
+  $("#ttCard").classList.toggle("flipB", false);   // start showing Week A
+
+  // build the shelf: the 5 needed + 5 distractors, shuffled
+  const all = new Set();
+  Object.values(TT.timetable).forEach(w => Object.values(w).forEach(d => d.forEach(x => all.add(x))));
+  const distractors = [...all].filter(x => !tt.needed.includes(x));
+  for(let i = distractors.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [distractors[i],distractors[j]]=[distractors[j],distractors[i]]; }
+  const books = tt.needed.concat(distractors.slice(0,5));
+  for(let i = books.length-1; i>0; i--){ const j=Math.floor(Math.random()*(i+1)); [books[i],books[j]]=[books[j],books[i]]; }
+
+  const shelf = $("#bookShelf"); shelf.innerHTML = "";
+  books.forEach((subj,i)=>{
+    const b = document.createElement("button");
+    b.className = "book-btn";
+    b.style.background = BOOK_COLOURS[i % BOOK_COLOURS.length];
+    const label = subj === "PE" ? "PE Kit 👟" : subj;
+    b.innerHTML = `<span class="book-label"><span>${label}</span></span>`;
+    b.setAttribute("aria-label", label);
+    b.addEventListener("click", ()=>ttPick(subj, b));
+    shelf.appendChild(b);
+  });
+
+  clearInterval(tt.timer);
+  tt.timer = setInterval(()=>{
+    if(!tt.running) return;
+    tt.timeLeft--;
+    $("#ttTimer").textContent = Math.max(0, tt.timeLeft);
+    if(tt.timeLeft <= 10) $("#ttTimer").classList.add("low");
+    if(tt.timeLeft <= 0) ttFinish(false);
+  }, 1000);
+  show("ttPackScreen");
+}
+
+function ttPick(subj, btn){
+  if(!tt.running || tt.lock || btn.classList.contains("packed")) return;
+  const idx = tt.needed.indexOf(subj);
+  if(idx >= 0){
+    playSelect();
+    tt.needed.splice(idx,1);
+    tt.packed++;
+    btn.classList.add("packed");
+    const bag = $("#ttBagIcon");
+    bag.classList.remove("bounce"); void bag.offsetWidth; bag.classList.add("bounce");
+    $("#ttBagCount").textContent = tt.packed + " / 5 packed";
+    $("#ttFeedback").textContent = subj === "PE"
+      ? "✔ PE kit sorted — Years 7–9 wear their kit to school on kit days!"
+      : "✔ " + subj + " — in the bag!";
+    if(tt.packed === 5) ttFinish(true);
+  } else {
+    btn.classList.remove("no"); void btn.offsetWidth; btn.classList.add("no");
+    tt.timeLeft = Math.max(0, tt.timeLeft - 5);
+    $("#ttTimer").textContent = tt.timeLeft;
+    $("#ttFeedback").textContent = "✘ No " + subj + " on " + tt.day + " Week " + tt.week + " — that's −5 seconds!";
+    if(tt.timeLeft <= 0) ttFinish(false);
+  }
+}
+
+function ttFinish(success){
+  tt.running = false;
+  clearInterval(tt.timer);
+  const fb = $("#ttFeedback");
+  if(success){
+    const score = 100 + tt.timeLeft * 10;
+    fb.innerHTML = `🌟 <b>Bag packed with ${tt.timeLeft}s to spare — score ${score}!</b> Ziggy is ready for ${tt.day}.`;
+    state.bestTimetable = Math.max(state.bestTimetable, score);
+    recomputeBestScore();
+    const cel = $("#ttCelebrate");
+    cel.src = ZIGGY_POSES.excited;
+    cel.classList.remove("show"); void cel.offsetWidth; cel.classList.add("show");
+  } else {
+    fb.innerHTML = `⏰ <b>Time's up!</b> Ziggy still needed: ${tt.needed.join(", ")}. Have another go!`;
+  }
+  const shelf = $("#bookShelf");
+  const row = document.createElement("div");
+  row.style.cssText = "grid-column:1/-1; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:6px";
+  row.innerHTML = `
+    <button class="btn secondary" id="ttAgain" style="font-size:1rem; padding:.5em 1.4em">Pack another day</button>
+    <button class="btn" id="ttLeave" style="font-size:1rem; padding:.5em 1.4em">Finish</button>`;
+  shelf.appendChild(row);
+  $("#ttAgain").addEventListener("click", startPack);
+  $("#ttLeave").addEventListener("click", ()=>show(state.returnScreen || "resultScreen"));
+}
+
+/* flip the timetable card */
+$("#ttCard").addEventListener("click", ()=> $("#ttCard").classList.toggle("flipB"));
+$("#ttCard").addEventListener("keydown", e=>{
+  if(e.code==="Space"||e.code==="Enter"){ e.preventDefault(); $("#ttCard").classList.toggle("flipB"); }
+});
+
+/* "View bigger" — reuses the same two card images at a larger size */
+let ttZoomB = false;
+function ttUpdateZoomImg(){
+  const src = ttZoomB
+    ? document.querySelector("#ttCardInner img.backface").src
+    : document.querySelector("#ttCardInner img:not(.backface)").src;
+  $("#ttZoomImg").src = src;
+}
+$("#ttZoomBtn").addEventListener("click", ()=>{
+  ttZoomB = $("#ttCard").classList.contains("flipB");
+  ttUpdateZoomImg();
+  $("#ttZoomOverlay").classList.add("open");
+});
+$("#ttZoomImg").addEventListener("click", ()=>{ ttZoomB = !ttZoomB; ttUpdateZoomImg(); });
+$("#ttZoomClose").addEventListener("click", ()=> $("#ttZoomOverlay").classList.remove("open"));
+
+
+/* ============================================================
+   BLACK & GREEN KEEPERS
+   Each scene is an image with a few tappable hotspots — one
+   for context (e.g. "check the rota") and the rest are the
+   actual jobs. Tap them all to finish the scene.
+   Add scenes 2-4 to KEEPERS.scenes as the images/tasks arrive.
+   ============================================================ */
+const KEEPERS = {
+  scenes:[
+    {
+      id:"formroom", title:"The Form Room",
+      img:"assets/img-5fe7055f66.webp",
+      intro:"It's the end of the day. Check the rota, then make sure the Form Room is left ready for the next class!",
+      tasks:[
+        { id:"rota", x:67, y:31, label:"Check the rota",
+          text:"There's a Keeper rota on the wall — is it your name on it today? It's your job to help tidy the room." },
+        { id:"electronics", x:15, y:47, label:"Electronics off",
+          text:"Before the class leaves, make sure all electronics — like the computer — are switched off." },
+        { id:"rubbish", x:6, y:75, label:"Rubbish in the bin",
+          text:"Any rubbish on the floor or desks goes straight in the bin." },
+        { id:"desks", x:45, y:80, label:"Clear the desks",
+          text:"Desks should be left clear and tidy, ready for the next lesson." },
+      ],
+      // The timed clean-up sprint that follows the checklist above.
+      // Best-guess positions on the classroom art — nudge x/y as needed.
+      sprint:{
+        seconds: 60,
+        messyImg: "assets/img-ca44cfd252.webp",
+        projector: {x:36, y:20},
+        chairs: [{x:91, y:74}],
+        // litter can be an emoji, or a real paper-scrap image for variety
+        litterKinds: [
+          {type:"emoji", value:"🧃"}, {type:"emoji", value:"🥤"},
+          {type:"emoji", value:"🍌"}, {type:"emoji", value:"🍬"}, {type:"emoji", value:"🧻"},
+          {type:"img", src:"assets/img-195cb13fdb.webp"},
+          {type:"img", src:"assets/img-158c837858.webp"},
+          {type:"img", src:"assets/img-a5d24b5b33.webp"},
+        ],
+        litterSpots: [
+          {x:30,y:88},{x:58,y:90},{x:38,y:70},{x:66,y:78},
+          {x:22,y:60},{x:80,y:60},{x:48,y:60},{x:70,y:45},
+          {x:25,y:40},{x:55,y:38},
+        ],
+        litterCount: 6,
+      },
+    },
+    {
+      id:"toilets", title:"The School Toilets",
+      img:"assets/img-9f8987e3ba.webp",
+      intro:"These are the school toilets. No tasks to tidy here — just a few important things every student should know.",
+      quiz:[
+        { q:"When are you allowed to use the toilets?",
+          options:[
+            "Before school, after school, during break and lunch — or during lessons with a teacher's permission or an approved pass",
+            "Anytime you like, including during lessons",
+            "Only during lessons",
+          ], a:0,
+          tip:"You can use the toilets before school, after school, and at break and lunch. During lessons you'll need a teacher's permission or an approved medical pass." },
+        { q:"What must you always do when you use the toilets?",
+          options:[
+            "Leave the taps running for the next person",
+            "Wash your hands, use one cubicle per student, flush, and leave it as you found it",
+            "Prop the door open so your friends can wait inside",
+          ], a:1,
+          tip:"Wash your hands, keep to one student per cubicle, flush when you're done, and leave everything as you found it. Tell a member of staff if anything's not right." },
+        { q:"What should you never do in the toilets?",
+          options:[
+            "Leave rubbish, eat, hang around during lessons, or come back late after the bell",
+            "Wash your hands before leaving",
+            "Report a problem to a member of staff",
+          ], a:0,
+          tip:"Never leave rubbish, eat in there, or use them as a place to hang out during lessons — and don't be late back after the bell has gone." },
+      ],
+    },
+    {
+      id:"schoolsite", title:"The School Site",
+      img:"assets/img-34edc575ff.webp",
+      intro:"Being Black & Green isn't just about one room — it's about the whole school site. Take a look around!",
+      tasks:[
+        { id:"playground", x:8, y:33, label:"Keep the playgrounds clean",
+          text:"You can ensure the playgrounds are clean by putting your rubbish in the bin — if everyone does it, it all stays clean." },
+        { id:"keeperrota", x:16, y:24, label:"Volunteer as a Form Keeper",
+          text:"You can volunteer to be a Keeper for your form — ask your form tutor to add your name to the rota." },
+        { id:"binlocation", x:42, y:68, label:"Bins around the school",
+          text:"There are bins placed all around the school — this will be the first one you see. Use them!" },
+        { id:"litterpicker", x:50, y:45, label:"Become a litter picker",
+          text:"You can volunteer to be a litter picker — you can earn Ziggy stickers and Teacher Points!",
+          img:"assets/img-eac606eef8.webp" },
+      ],
+      quiz:[
+        { q:"What can everyone do to help keep the playgrounds clean?",
+          options:["Put rubbish in the bin","Leave it for someone else","Kick it under a bench"], a:0,
+          tip:"If everyone puts their rubbish in the bin, the playgrounds stay clean for everybody." },
+        { q:"How do you volunteer to be your form's Keeper?",
+          options:["You can't — it's chosen for you","Ask your form tutor to add your name to the rota","Tell the Headteacher"], a:1,
+          tip:"Just ask your form tutor to put your name on the Keeper rota." },
+        { q:"What should you do with the bins placed around the school?",
+          options:["Walk past them","Use them!","Only use the one in your form room"], a:1,
+          tip:"There are bins all over the site — always use the nearest one." },
+        { q:"What can you earn by volunteering as a litter picker?",
+          options:["Nothing, it's just a chore","A detention","Ziggy stickers and Teacher Points"], a:2,
+          tip:"Litter pickers can earn Ziggy stickers and Teacher Points — a great way to show your Black & Green values." },
+      ],
+    },
+    // The Canteen scene goes here whenever it's ready.
+  ],
+};
+
+const kp = { sceneIndex:0, done:new Set(), totalScore:0 };
+
+function startKeepers(){
+  kp.sceneIndex = 0;
+  kp.totalScore = 0;
+  loadKeepersScene();
+  show("keepersScreen");
+}
+
+function loadKeepersScene(){
+  const scene = KEEPERS.scenes[kp.sceneIndex];
+  kp.done = new Set();
+  $("#kpSceneLabel").textContent = `Scene ${kp.sceneIndex+1} of ${KEEPERS.scenes.length} · ${scene.title}`;
+  $("#kpSceneImg").src = scene.img;
+  const bg0 = $("#kpSceneImgB");
+  bg0.style.transition = "none"; bg0.style.opacity = 0;
+  void bg0.offsetWidth; bg0.style.transition = "";
+  $("#kpPrompt").textContent = scene.intro;
+  $("#kpPrompt").style.display = "block";
+  $("#kpComplete").classList.remove("show");
+
+  const wrap = $("#kpSceneWrap");
+  wrap.querySelectorAll(".hotspot").forEach(h=>h.remove());
+
+  if(scene.quiz && !scene.tasks){
+    // purely informative scene, no hotspots — just the image and a run of policy questions
+    kp.quizIndex = 0;
+    startKeepersQuiz(scene);
+    return;
+  }
+
+  scene.tasks.forEach(t=>{
+    const h = document.createElement("button");
+    h.className = "hotspot";
+    h.style.left = t.x + "%";
+    h.style.top  = t.y + "%";
+    h.setAttribute("aria-label", t.label);
+    h.addEventListener("click", ()=>keepersPick(scene, t, h));
+    wrap.appendChild(h);
+  });
+
+  const chips = $("#kpTasks"); chips.innerHTML = "";
+  scene.tasks.forEach(t=>{
+    const c = document.createElement("span");
+    c.className = "kp-task-chip";
+    c.id = "kpchip-"+t.id;
+    c.textContent = t.label;
+    chips.appendChild(c);
+  });
+}
+
+/* ---- quiz-only scenes (informative image + a run of policy questions) ---- */
+function startKeepersQuiz(scene){
+  askKeepersQuiz(scene);
+}
+
+function askKeepersQuiz(scene){
+  const item = scene.quiz[kp.quizIndex];
+  const box = $("#kpTasks");
+  box.innerHTML = `
+    <p style="font-weight:800; margin:.2em 0">Question ${kp.quizIndex+1} of ${scene.quiz.length}</p>
+    <p style="font-weight:800; margin:.2em 0">${item.q}</p>
+    <div class="answers"></div>
+    <p class="adv-tip" aria-live="polite"></p>`;
+  const answers = box.querySelector(".answers");
+  item.options.forEach((opt, idx)=>{
+    const b = document.createElement("button");
+    b.className = "answer-btn";
+    b.textContent = opt;
+    b.addEventListener("click", ()=>{
+      if(idx === item.a){
+        playSelect();
+        answers.querySelectorAll("button").forEach(x=>x.disabled = true);
+        b.classList.add("correct");
+        box.querySelector(".adv-tip").textContent = "✔ " + item.tip;
+        kp.totalScore += 20;
+        syncKeepersScore();
+        setTimeout(()=>{
+          kp.quizIndex++;
+          if(kp.quizIndex < scene.quiz.length) askKeepersQuiz(scene);
+          else finishKeepersScene(scene);
+        }, 2400);
+      } else {
+        b.classList.remove("wrong"); void b.offsetWidth; b.classList.add("wrong");
+        box.querySelector(".adv-tip").textContent = "Not quite — have another go!";
+      }
+    });
+    answers.appendChild(b);
+  });
+}
+
+/* ---- called when a scene's activity is fully done — advances to the next scene, or wraps up the game ---- */
+function finishKeepersScene(scene){
+  $("#kpPrompt").style.display = "none";
+  $("#kpTasks").innerHTML = "";
+  if(kp.sceneIndex + 1 < KEEPERS.scenes.length){
+    kp.sceneIndex++;
+    loadKeepersScene();
+  } else {
+    const h = $("#kpComplete").querySelector("h3");
+    const p = $("#kpComplete").querySelector("p");
+    if(h) h.textContent = "You're a Black & Green Keeper! 🌟";
+    if(p) p.innerHTML = `You've completed every Keeper scene.<br>Your final Keeper score: <b>${kp.totalScore}</b>`;
+    $("#kpComplete").classList.add("show");
+  }
+}
+
+function keepersPick(scene, t, h){
+  if(kp.done.has(t.id)) return;
+  kp.done.add(t.id);
+  h.classList.add("done"); h.textContent = "✓";
+  const chip = document.getElementById("kpchip-"+t.id);
+  if(chip) chip.classList.add("done");
+  if(t.img){
+    $("#kpPrompt").innerHTML =
+      `<img src="${t.img}" alt="" style="max-width:140px; display:block; margin:0 auto 6px; border:3px solid var(--ink); border-radius:10px;">${t.text}`;
+  } else {
+    $("#kpPrompt").textContent = t.text;
+  }
+
+  if(kp.done.size === scene.tasks.length){
+    setTimeout(()=>{
+      $("#kpPrompt").style.display = "none";
+      if(scene.sprint) startKeepersSprint(scene);
+      else if(scene.quiz){ kp.quizIndex = 0; startKeepersQuiz(scene); }
+      else finishKeepersScene(scene);
+    }, 900);
+  }
+}
+
+/* ---- the timed clean-up sprint: bin the litter, kill the projector, tuck the chairs ---- */
+const sprint = { timer:null, timeLeft:0, total:0, cleared:0, running:false, score:0 };
+
+function startKeepersSprint(scene){
+  const cfg = scene.sprint;
+  const wrap = $("#kpSceneWrap");
+  wrap.querySelectorAll(".hotspot,.kp-litter,.kp-fix").forEach(el=>el.remove());
+
+  $("#kpTasks").innerHTML = "";
+  $("#kpPrompt").style.display = "block";
+  $("#kpPrompt").textContent = "Quick, Keeper! Bin the litter, switch off the projector, and tuck in the chair before the timer runs out!";
+  $("#kpSprintEnd").classList.remove("show");
+
+  // reveal the messy version of the room (bin out, chair pulled out) under the tasks
+  const bg = $("#kpSceneImgB");
+  bg.src = cfg.messyImg;
+  requestAnimationFrame(()=>{ bg.style.opacity = 1; });
+
+  sprint.cleared = 0;
+  sprint.score = 0;
+  sprint.total = cfg.litterCount + 1 + cfg.chairs.length;   // litter + projector + chairs
+  $("#kpSprintTotal").textContent = sprint.total;
+  $("#kpSprintCount").textContent = 0;
+  $("#kpSprintScore").textContent = 0;
+
+  // scattered litter — a random subset of the spot pool, random emoji/paper each
+  const spots = cfg.litterSpots.slice().sort(()=>Math.random()-0.5).slice(0, cfg.litterCount);
+  spots.forEach(spot=>{
+    const kind = cfg.litterKinds[Math.floor(Math.random()*cfg.litterKinds.length)];
+    const b = document.createElement("button");
+    b.className = "kp-litter";
+    if(kind.type === "img"){
+      b.innerHTML = `<img src="${kind.src}" alt="">`;
+    } else {
+      b.textContent = kind.value;
+    }
+    b.style.left = spot.x + "%";
+    b.style.top  = spot.y + "%";
+    b.setAttribute("aria-label","Litter — tap to clear it away");
+    b.addEventListener("click", ()=>{
+      if(!sprint.running || b.classList.contains("gone")) return;
+      b.classList.add("gone");
+      sprintProgress();
+      setTimeout(()=>b.remove(), 350);
+    });
+    wrap.appendChild(b);
+  });
+
+  // the projector — glowing until clicked off
+  const proj = document.createElement("button");
+  proj.className = "kp-fix";
+  proj.textContent = "💡";
+  proj.style.left = cfg.projector.x + "%";
+  proj.style.top  = cfg.projector.y + "%";
+  proj.setAttribute("aria-label","Projector — tap to switch off");
+  proj.addEventListener("click", ()=>{
+    if(!sprint.running) return;
+    proj.remove();
+    sprintProgress();
+  });
+  wrap.appendChild(proj);
+
+  // the chairs left pulled out
+  cfg.chairs.forEach(ch=>{
+    const c = document.createElement("button");
+    c.className = "kp-fix";
+    c.textContent = "🪑";
+    c.style.left = ch.x + "%";
+    c.style.top  = ch.y + "%";
+    c.setAttribute("aria-label","Chair — tap to tuck it in");
+    c.addEventListener("click", ()=>{
+      if(!sprint.running) return;
+      c.remove();
+      sprintProgress();
+    });
+    wrap.appendChild(c);
+  });
+
+  sprint.timeLeft = cfg.seconds;
+  $("#kpSprintTime").textContent = sprint.timeLeft;
+  $("#kpSprintTime").classList.remove("low");
+  $("#kpSprintBar").classList.add("show");
+  sprint.running = true;
+  clearInterval(sprint.timer);
+  sprint.timer = setInterval(()=>{
+    sprint.timeLeft--;
+    $("#kpSprintTime").textContent = sprint.timeLeft;
+    if(sprint.timeLeft <= 10) $("#kpSprintTime").classList.add("low");
+    if(sprint.timeLeft <= 0) endKeepersSprint(scene, false);
+  }, 1000);
+}
+
+function sprintProgress(){
+  sprint.cleared++;
+  sprint.score += 15;
+  $("#kpSprintCount").textContent = sprint.cleared;
+  $("#kpSprintScore").textContent = sprint.score;
+  if(sprint.cleared >= sprint.total) endKeepersSprint(currentKeepersScene(), true);
+}
+
+function currentKeepersScene(){ return KEEPERS.scenes[kp.sceneIndex]; }
+
+function endKeepersSprint(scene, success){
+  sprint.running = false;
+  clearInterval(sprint.timer);
+  $("#kpSprintBar").classList.remove("show");
+  $("#kpPrompt").style.display = "none";
+  $("#kpSceneWrap").querySelectorAll(".kp-litter,.kp-fix").forEach(el=>el.remove());
+
+  if(success){
+    const speedBonus = sprint.timeLeft * 5;
+    sprint.score += speedBonus;
+    kp.totalScore += sprint.score;
+    syncKeepersScore();
+    $("#kpSceneImgB").style.opacity = 0;   // reveal the clean room again — the reward
+    $("#kpSprintTitle").textContent = "Room clear! 🎉";
+    $("#kpSprintText").innerHTML =
+      `Brilliant Keeper work — everything's binned, switched off and tucked in, with <b>${sprint.timeLeft}s</b> to spare!<br>` +
+      `Score: <b>${sprint.score}</b> (${sprint.cleared} items + ${speedBonus} speed bonus)`;
+    $("#kpSprintScore").textContent = sprint.score;
+    $("#kpSprintRetry").style.display = "none";
+  } else {
+    $("#kpSprintTitle").textContent = "Time's up!";
+    $("#kpSprintText").innerHTML = `You sorted ${sprint.cleared} out of ${sprint.total} for <b>${sprint.score}</b> points — have another go for a full score!`;
+    $("#kpSprintRetry").style.display = "inline-block";
+  }
+  $("#kpSprintEnd").classList.add("show");
+}
+
+$("#kpSprintRetry").addEventListener("click", ()=> startKeepersSprint(currentKeepersScene()));
+$("#kpSprintContinue").addEventListener("click", ()=>{
+  $("#kpSprintEnd").classList.remove("show");
+  finishKeepersScene(currentKeepersScene());
+});
+
+const GAME_BLURBS = {
+  firstday:  "Explore the school with Ziggy and learn where everything is.",
+  timetable: "Help Ziggy pack the right books and crack the timetable.",
+  grandquiz: "Learn how to keep our school clean and tidy, Ravens Wood style.",
+};
+
+/* Each unlocked game will launch from here — for now they open a
+   'coming soon' page. Replace these stubs with real games later. */
+function launchGame(game){
+  if(game.id === "firstday"){ startAdventure(); return; }
+  if(game.id === "timetable"){ startTimetableGame(); return; }
+  if(game.id === "grandquiz"){ startKeepers(); return; }
+  $("#csPose").src = ZIGGY_POSES[game.pose];
+  $("#csTitle").textContent = game.title;
+  $("#csBlurb").textContent = GAME_BLURBS[game.id] || "";
+  show("comingSoonScreen");
+}
+
+function renderUnlocks(total){
+  const note = $("#bestTotalNote");
+  const nextLocked = SCHOOL_CONFIG.unlockGames.find(g => total < g.threshold);
+  note.textContent = nextLocked
+    ? `Your best total so far: ${total} points — ${nextLocked.threshold - total} more to unlock ${nextLocked.title}!`
+    : `Your best total so far: ${total} points — every game unlocked! 🌟`;
+
+  const row = $("#unlockRow"); row.innerHTML = "";
+  SCHOOL_CONFIG.unlockGames.forEach(g=>{
+    const unlocked = total >= g.threshold;
+    const b = document.createElement("button");
+    b.className = "game-btn" + (unlocked ? "" : " locked");
+    b.innerHTML = `
+      <img src="${ZIGGY_POSES[g.pose]}" alt="" draggable="false">
+      <span class="g-title">${g.title}</span>
+      <span class="g-state">${unlocked ? "Play" : "🔒 Score "+g.threshold+"+"}</span>`;
+    b.setAttribute("aria-label", g.title + (unlocked ? " — unlocked" : " — locked, score "+g.threshold+" or more to unlock"));
+    b.addEventListener("click", ()=>{
+      if(unlocked){ playConfirm(); state.returnScreen = "resultScreen"; launchGame(g); }
+      else {
+        b.classList.remove("nudge"); void b.offsetWidth; b.classList.add("nudge");
+      }
+    });
+    row.appendChild(b);
+  });
+
+  // the Flight Challenge is a bonus, separate from the score-gated games —
+  // it appears once every one of them is unlocked, as a reward, not a gate
+  const allUnlocked = SCHOOL_CONFIG.unlockGames.every(g => total >= g.threshold);
+  $("#flightChallengeCard").classList.toggle("show", allUnlocked);
+  if(allUnlocked){
+    $("#flightChallengePose").src = ZIGGY_POSES.excited;
+    $("#flightChallengeBest").textContent = state.bestFlightChallenge > 0
+      ? `Your best score: ${state.bestFlightChallenge}`
+      : "Not attempted yet — give it a go!";
+  }
+}
+$("#flightChallengeBtn").addEventListener("click", ()=>{
+  playConfirm();
+  state.returnScreen = "resultScreen";
+  startFlightChallenge();
+});
+document.querySelectorAll("[data-back]").forEach(b=>
+  b.addEventListener("click", ()=>{ playConfirm(); show(state.returnScreen || "resultScreen"); }));
+document.querySelectorAll("[data-back-home]").forEach(b=>
+  b.addEventListener("click", ()=>{ playConfirm(); show("titleScreen"); }));
+
+function showResults(){
+  $("#resultZiggy").innerHTML = ziggyImg();
+  $("#resultZiggy").classList.add("bob");
+  const total = state.memoryScore + state.flightScore;
+  state.bestMemoryFlight = Math.max(state.bestMemoryFlight, total);
+  recomputeBestScore();
+  $("#finalScore").textContent = total;
+  renderUnlocks(state.bestScore);
+  $("#resultTitle").textContent =
+    total >= 500 ? "Superstar! 🌟" : total >= 350 ? "Quest complete!" : "Well flown!";
+  const recap = $("#valuesRecap"); recap.innerHTML = "";
+  SCHOOL_CONFIG.values.forEach(v=>{
+    const d = document.createElement("div");
+    d.className = "recap-item";
+    d.innerHTML = `<b>${v.word}</b><span>${v.meaning}</span>`;
+    recap.appendChild(d);
+  });
+  show("resultScreen");
+}
+$("#againBtn").addEventListener("click", ()=>show("titleScreen"));
+$("#freeExploreBtn").addEventListener("click", ()=>{
+  state.returnScreen = "resultScreen";
+  startAdventure();
+  enterExplore(1);
+});
+</script>
+</body>
+</html>
